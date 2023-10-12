@@ -11,14 +11,16 @@ Suggestions list:
  - something with ctrl-s
 """
 
-import pygame, pyperclip
-from pygame.locals import *
+import pyperclip
+import pygame
+import pygame.locals as py_locals
 
 UNIT = 10
 KMOD_BASE = 4096
 MARGIN = 10
 
-class RootBlock():
+
+class RootBlock:
 
     def __init__(self, **kwargs):
         if kwargs.get('colour_palette', None) is None:
@@ -73,7 +75,6 @@ class RootBlock():
             child.draw_block()
 
 
-
 class Block(RootBlock):
 
     def __init__(self, **kwargs):
@@ -85,7 +86,8 @@ class Block(RootBlock):
         alignx, aligny = None, None
         if kwargs.get('coordinates', None) is not None:
             self.coordinates = kwargs['coordinates']
-            assert len(self.coordinates) == 2, "An incorrect number of coordinates where provided. Either provide two coordinates or use the coordx, coordy, alignx and aligny arguments."
+            assert len(self.coordinates) == 2, ("An incorrect number of coordinates where provided. "
+                                                "Either provide two coordinates or use the coordx, coordy, alignx and aligny arguments.")
             self.coordinates = tuple(self.coordinates)
             x_count += 1
             y_count += 1
@@ -142,10 +144,10 @@ class Block(RootBlock):
         super().__init__(**kwargs)
 
     def create_object(self):
-        if type(self.coordinates) is list: # Indicates that one or both coordinates were not provided
-            if any(self.alignment): # This should always be true if the coordinates have the proper amount of definition
+        if type(self.coordinates) is list:  # Indicates that one or both coordinates were not provided
+            if any(self.alignment):  # This should always be true if the coordinates have the proper amount of definition
 
-                ### Look to collapse this structure in the future
+                # Look to collapse this structure in the future
 
                 alignx, aligny = self.alignment
                 marginx, marginy = self.margin
@@ -204,7 +206,6 @@ class Block(RootBlock):
         self.parent.surface.blit(self.surface, self.coordinates)
 
 
-
 class Text(Block):
 
     def __init__(self, **kwargs):
@@ -240,13 +241,16 @@ class Text(Block):
 
         self.primary_text['text'] = self.font.render(self.primary_text['value'], 1, self.font_colour)
         if self.text_alignment == 'left':
-            self.primary_text['pos'] = (self.primary_text['text'].get_rect(left=MARGIN,
-                                 centery=centre_coords[1]))
+            self.primary_text['pos'] = (self.primary_text['text'].get_rect(
+                left=MARGIN,
+                centery=centre_coords[1]))
         elif self.text_alignment == 'centre':
-            self.primary_text['pos'] = (self.primary_text['text'].get_rect(center=centre_coords))
+            self.primary_text['pos'] = (self.primary_text['text'].get_rect(
+                center=centre_coords))
         elif self.text_alignment == 'right':
-            self.primary_text['pos'] = (self.primary_text['text'].get_rect(right=(self.dimensions[0] - MARGIN),
-                                 centery=centre_coords[1]))
+            self.primary_text['pos'] = (self.primary_text['text'].get_rect(
+                right=(self.dimensions[0] - MARGIN),
+                centery=centre_coords[1]))
 
     def set_text(self, text):
         self.primary_text['value'] = text
@@ -264,7 +268,6 @@ class Text(Block):
     def blit_text(self):
         self.update_text()
         self.surface.blit(self.primary_text['text'], self.primary_text['pos'])
-
 
 
 class Button(Text):
@@ -285,7 +288,7 @@ class Button(Text):
         super().__init__(**kwargs)
 
         def hold_down(event):
-            if self.checkCollision(event):
+            if self.check_collision(event):
                 self.held = True
 
         def release(event):
@@ -310,13 +313,11 @@ class Button(Text):
 
     def create_rect(self):
         # Create rect object for simplicity of collision detection
-        self.button_rect = Rect(self.overall_coords, self.dimensions)
+        self.button_rect = py_locals.Rect(self.overall_coords, self.dimensions)
 
     def set_mouse_handlers(self, function_dict):
         for func_name, func in function_dict.items():
-
             def modify_default(default_func, new_func):
-
                 def inner(*arg):
                     new_func(*arg)
                     default_func(*arg)
@@ -332,18 +333,18 @@ class Button(Text):
         if event.type == pygame.MOUSEMOTION:
             self.event_function_dict['move_mouse'](event)
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button < 4:
-            if event.button == 1: # Left mouse
+            if event.button == 1:  # Left mouse
                 self.event_function_dict['left_mouse_down'](event)
-            elif event.button == 2: # Middle mouse
+            elif event.button == 2:  # Middle mouse
                 self.event_function_dict['middle_mouse_down'](event)
-            elif event.button == 3: # Right mouse
+            elif event.button == 3:  # Right mouse
                 self.event_function_dict['right_mouse_down'](event)
         elif event.type == pygame.MOUSEBUTTONUP and event.button < 4:
-            if event.button == 1: # Left mouse
+            if event.button == 1:  # Left mouse
                 self.event_function_dict['left_mouse_up'](event)
-            elif event.button == 2: # Middle mouse
+            elif event.button == 2:  # Middle mouse
                 self.event_function_dict['middle_mouse_up'](event)
-            elif event.button == 3: # Right mouse
+            elif event.button == 3:  # Right mouse
                 self.event_function_dict['right_mouse_up'](event)
         else:
             assert (event.type == pygame.MOUSEBUTTONDOWN or
@@ -357,12 +358,12 @@ class Button(Text):
 
             self.event_function_dict['scroll_mouse'](event, scroll)
 
-    def checkCollision(self, event):
+    def check_collision(self, event):
         mouse_pos = event.pos
         return self.button_rect.collidepoint(mouse_pos)
 
     def keyboard_event_handler(self, event):
-        if event.key == RETURN:
+        if event.key == py_locals.RETURN:
             self.event_function_dict['left_mouse_up'](event)
 
     def move(self, del_x=0, del_y=0, x=None, y=None):
@@ -382,7 +383,6 @@ class Button(Text):
         self.overall_coords[1] += del_y
 
         self.create_rect()
-
 
 
 class TextBox(Button):
@@ -422,10 +422,12 @@ class TextBox(Button):
         cursor_colour = self.font_colour if self.cursor_info['on'] else self.colour
 
         self.cursor_info['text'] = self.font.render('|', 1, cursor_colour)
-        self.cursor_info['pos'] = self.cursor_info['text'].get_rect(left=text_rect.right, centery=text_rect.centery)
+        self.cursor_info['pos'] = self.cursor_info['text'].get_rect(
+            left=text_rect.right,
+            centery=text_rect.centery)
 
     def toggle_select(self, event):
-        isCollision = self.checkCollision(event)
+        isCollision = self.check_collision(event)
         if isCollision:
             self.active = True
             self.gui.active_object = self
@@ -452,8 +454,9 @@ class TextBox(Button):
         if self.active:
 
             if self.primary_text['pos'].width + self.cursor_info['pos'].width > (self.dimensions[0] - 2 * MARGIN):
-                self.primary_text['pos'] = (self.primary_text['text'].get_rect(right=(self.dimensions[0] - MARGIN) - self.cursor_info['pos'].width,
-                                     centery=self.primary_text['pos'].centery))
+                self.primary_text['pos'] = (self.primary_text['text'].get_rect(
+                    right=(self.dimensions[0] - MARGIN) - self.cursor_info['pos'].width,
+                    centery=self.primary_text['pos'].centery))
 
             second_text_left = self.cursor_info['pos'].right
 
@@ -463,8 +466,9 @@ class TextBox(Button):
         self.update_cursor()
 
         self.second_text['text'] = self.font.render(self.second_text['value'], 1, self.font_colour)
-        self.second_text['pos'] = self.second_text['text'].get_rect(left=second_text_left,
-                                                                    centery=self.primary_text['pos'].centery)
+        self.second_text['pos'] = self.second_text['text'].get_rect(
+            left=second_text_left,
+            centery=self.primary_text['pos'].centery)
 
     def toggle_cursor(self):
         self.cursor_info['on'] = not self.cursor_info['on']
@@ -483,15 +487,15 @@ class TextBox(Button):
         super().remove_text(amount)
 
     def keyboard_event_handler(self, event):
-        if (event.mod - KMOD_BASE == KMOD_LCTRL or
-            event.mod - KMOD_BASE == KMOD_RCTRL or
-            event.mod - KMOD_BASE == KMOD_CTRL):
+        if (event.mod - KMOD_BASE == py_locals.KMOD_LCTRL or
+                event.mod - KMOD_BASE == py_locals.KMOD_RCTRL or
+                event.mod - KMOD_BASE == py_locals.KMOD_CTRL):
             character = pygame.key.name(event.key)
             if character == 'x':
                 pyperclip.copy(self.primary_text['value'] + self.second_text['value'])
                 self.second_text['value'] = ''
                 self.set_text('')
-            elif character =='c':
+            elif character == 'c':
                 pyperclip.copy(self.primary_text['value'] + self.second_text['value'])
             elif character == 'v':
                 text = pyperclip.paste()
@@ -500,15 +504,15 @@ class TextBox(Button):
 
             elif character in ['a', 's', 'z', 'y', 'x', 'c', 'v']:
                 print('Get to this...')
-        elif event.key == K_RETURN:
+        elif event.key == py_locals.K_RETURN:
             pass
-        elif event.key == K_BACKSPACE:
+        elif event.key == py_locals.K_BACKSPACE:
             self.remove_text()
-        elif event.key == K_DELETE:
+        elif event.key == py_locals.K_DELETE:
             self.second_text['value'] = self.second_text['value'][1:]
-        elif event.key == K_LEFT:
+        elif event.key == py_locals.K_LEFT:
             self.move_cursor(-1)
-        elif event.key == K_RIGHT:
+        elif event.key == py_locals.K_RIGHT:
             self.move_cursor(1)
         else:
             self.append_text(event.unicode)
@@ -519,7 +523,6 @@ class TextBox(Button):
         super().blit_text()
         self.surface.blit(self.cursor_info['text'], self.cursor_info['pos'])
         self.surface.blit(self.second_text['text'], self.second_text['pos'])
-
 
 
 class Slider(Button):
@@ -536,7 +539,6 @@ class Slider(Button):
         self.set_mouse_handlers({'left_mouse_down': self.hold_slider,
                                  'left_mouse_up': self.release_slider,
                                  'move_mouse': self.drag_slider})
-
 
     def set_x_pos(self, x_pos):
         new_x = (self.max_limits[0] - self.min_limits[0]) * x_pos + self.min_limits[0]
@@ -578,7 +580,7 @@ class Slider(Button):
             self.dropdown.rel_scroll_list((y - self.min_limits[1]) / (self.max_limits[1] - self.min_limits[1]))
 
     def hold_slider(self, event):
-        isCollision = self.checkCollision(event)
+        isCollision = self.check_collision(event)
         if isCollision:
             self.held = True
             for i in range(2):
@@ -587,7 +589,6 @@ class Slider(Button):
     def release_slider(self, isCollision):
         self.held = False
         self.offset = [0, 0]
-
 
 
 class Dropdown(Block):
@@ -689,9 +690,9 @@ class Dropdown(Block):
         self.textbox.remove_text = dropdown_child(self.textbox.remove_text)
 
         def dropdown_textbox_toggle(event):
-            textboxCollision = self.textbox.checkCollision(event)
-            buttonCollision = self.button.checkCollision(event)
-            dropdownCollision = 0 if self.dropdown is None else self.dropdown.checkCollision(event)
+            textboxCollision = self.textbox.check_collision(event)
+            buttonCollision = self.button.check_collision(event)
+            dropdownCollision = 0 if self.dropdown is None else self.dropdown.check_collision(event)
 
             if textboxCollision or buttonCollision:
                 self.textbox.active = True
@@ -715,13 +716,12 @@ class Dropdown(Block):
         points = [(10, 15), (30, 15), (20, 30)]
 
         self.button = Button(gui=self.gui, parent=self.parent,
-                             dimensions=button_dim, coordinates=button_coords, colour='tile_colour',
-                             polygon=(colour, points))
-
+            dimensions=button_dim, coordinates=button_coords, colour='tile_colour',
+            polygon=(colour, points))
 
         def dropdown_button_up(event):
-            buttonCollision = self.button.checkCollision(event)
-            dropdownCollision = False if self.dropdown is None else self.dropdown.checkCollision(event)
+            buttonCollision = self.button.check_collision(event)
+            dropdownCollision = False if self.dropdown is None else self.dropdown.check_collision(event)
 
             if buttonCollision and self.button.held:
                 if self.active:
@@ -731,16 +731,15 @@ class Dropdown(Block):
                     self.open_dropdown_list()
 
         def dropdown_button_down(event):
-            textboxCollision = self.textbox.checkCollision(event)
-            buttonCollision = self.button.checkCollision(event)
-            dropdownCollision = False if self.dropdown is None else self.dropdown.checkCollision(event)
+            textboxCollision = self.textbox.check_collision(event)
+            buttonCollision = self.button.check_collision(event)
+            dropdownCollision = False if self.dropdown is None else self.dropdown.check_collision(event)
 
             if not any([textboxCollision, buttonCollision, dropdownCollision]) and self.active:
                 self.close_dropdown_list()
 
         self.button.set_mouse_handlers({'left_mouse_up': dropdown_button_up,
                                         'left_mouse_down': dropdown_button_down})
-
 
     def abs_scroll_list(self, scroll):
         self.scroll_amount += scroll * self.scroll_constant
@@ -753,11 +752,9 @@ class Dropdown(Block):
         self.scroll_handle.set_y_pos(scroll_ratio)
         self.update_item_positions()
 
-
     def rel_scroll_list(self, scroll_ratio):
         self.scroll_amount = int(scroll_ratio * self.max_scroll)
         self.update_item_positions()
-
 
     def open_dropdown_list(self):
         self.active = True
@@ -776,26 +773,36 @@ class Dropdown(Block):
         available_space = parent_tmp.surface.get_height() - (y_coord_tmp + total_height + MARGIN)
         max_items = min(len(self.options_list), available_space // item_height)
 
-
         dropdown_dimensions = total_width, max_items * item_height
         dropdown_coords = x_coord, y_coord + total_height
-        self.dropdown = Button(gui=self.gui, parent=self.parent, dimensions=dropdown_dimensions,
-                               coordinates=dropdown_coords, colour='white', priority=99)
+        self.dropdown = Button(
+            gui=self.gui,
+            parent=self.parent,
+            dimensions=dropdown_dimensions,
+            coordinates=dropdown_coords,
+            colour='white',
+            priority=99)
 
         self.max_scroll = max(0, len(self.options_list) * item_height - dropdown_dimensions[1])
 
         item_dim = item_width, item_height
         for i, item in enumerate(self.options_list):
             item_coords = 0, i * item_height - self.scroll_amount
-            button = Button(gui=self.gui, parent=self.dropdown, dimensions=item_dim, coordinates=item_coords,
-                            colour='white', text_value=item, text_alignment='left')
+            button = Button(
+                gui=self.gui,
+                parent=self.dropdown,
+                dimensions=item_dim,
+                coordinates=item_coords,
+                colour='white',
+                text_value=item,
+                text_alignment='left')
 
             def create_function():
                 value_copy = item
                 tmp_button = button
 
                 def button_func(event):
-                    if tmp_button.checkCollision(event) and tmp_button.held:
+                    if tmp_button.check_collision(event) and tmp_button.held:
                         self.close_dropdown_list()
                         self.textbox.set_text(value_copy)
 
@@ -806,15 +813,21 @@ class Dropdown(Block):
 
             self.item_dict[i] = button
 
-
         scroll_handle_dimensions = total_width - item_width, int(dropdown_dimensions[1] ** 2 / (len(self.options_list) * item_height))
         scroll_handle_initial_coords = item_width, 0
         limits = (item_width, 0), (item_width, dropdown_dimensions[1] - scroll_handle_dimensions[1])
-        self.scroll_handle = Slider(gui=self.gui, parent=self.dropdown, dimensions=scroll_handle_dimensions,
-                                    coordinates=scroll_handle_initial_coords, colour='tile_colour', dropdown=self, move_limits=limits)
+        self.scroll_handle = Slider(
+            gui=self.gui,
+            parent=self.dropdown,
+            dimensions=scroll_handle_dimensions,
+            coordinates=scroll_handle_initial_coords,
+            colour='tile_colour',
+            dropdown=self,
+            move_limits=limits)
 
-        self.dropdown.set_mouse_handlers({'scroll_mouse': lambda event, scroll: self.abs_scroll_list(scroll) if self.dropdown.checkCollision(event) else None})
-
+        self.dropdown.set_mouse_handlers(
+            {'scroll_mouse': lambda event, scroll: self.abs_scroll_list(scroll) if self.dropdown.check_collision(event) else None}
+        )
 
     def close_dropdown_list(self):
         self.active = False
@@ -844,8 +857,7 @@ class Dropdown(Block):
         self.textbox.keyboard_event_handler(event)
 
 
-
-class myGUI():
+class MyGUI:
 
     def __init__(self, *args, **kwargs):
         """window_size, caption, win_colour, colour_palette=None -> myGUI
@@ -857,11 +869,11 @@ class myGUI():
             kwargs[arg_names[i]] = arg
         self.window = RootBlock(**kwargs)
         self.active_object = None
+        self.running = False
 
         self.arg_names = ('parent', 'dimensions', 'coordinates', 'colour', 'text_value', 'text_colour', 'text_size')
 
-
-    def run_GUI(self):
+    def run_gui(self):
         self.running = True
         pygame.init()
 
@@ -882,12 +894,12 @@ class myGUI():
 
             for event in pygame.event.get():
                 # Keyboard Events
-                if event.type == KEYDOWN:
-                    if event.key == K_ESCAPE:
-                        self.quit_gui() # Allows user to overwrite quit process
-                    if (event.mod - KMOD_BASE == KMOD_LCTRL or
-                        event.mod - KMOD_BASE == KMOD_RCTRL or
-                        event.mod - KMOD_BASE == KMOD_CTRL):
+                if event.type == py_locals.KEYDOWN:
+                    if event.key == py_locals.K_ESCAPE:
+                        self.quit_gui()  # Allows user to overwrite quit process
+                    if (event.mod - KMOD_BASE == py_locals.KMOD_LCTRL or
+                            event.mod - KMOD_BASE == py_locals.KMOD_RCTRL or
+                            event.mod - KMOD_BASE == py_locals.KMOD_CTRL):
                         character = pygame.key.name(event.key)
                         if character == 's':
                             self.save()
@@ -900,11 +912,9 @@ class myGUI():
 
                 # Mouse Events
                 if (event.type == pygame.MOUSEBUTTONDOWN or
-                    event.type == pygame.MOUSEBUTTONUP or
-                    event.type == pygame.MOUSEMOTION):
-
+                        event.type == pygame.MOUSEBUTTONUP or
+                        event.type == pygame.MOUSEMOTION):
                     self.window.mouse_event_handler(event)
-
 
             self.window.draw_block()
             pygame.display.flip()
@@ -914,11 +924,9 @@ class myGUI():
     def quit_gui(self):
         self.running = False
 
-
     def clear_gui(self):
         for child in list(self.window.children):
             child.__delitem__()
-
 
     def save(self):
         pass
@@ -931,13 +939,11 @@ class myGUI():
             kwargs[self.arg_names[i]] = arg
         return Block(**kwargs)
 
-
     def create_text(self, *args, **kwargs):
         kwargs['gui'] = self
         for i, arg in enumerate(args):
             kwargs[self.arg_names[i]] = arg
         return Text(**kwargs)
-
 
     def create_button(self, *args, **kwargs):
         kwargs['gui'] = self
@@ -945,13 +951,11 @@ class myGUI():
             kwargs[self.arg_names[i]] = arg
         return Button(**kwargs)
 
-
     def create_textbox(self, *args, **kwargs):
         kwargs['gui'] = self
         for i, arg in enumerate(args):
             kwargs[self.arg_names[i]] = arg
         return TextBox(**kwargs)
-
 
     def create_dropdown(self, *args, **kwargs):
         kwargs['gui'] = self
@@ -967,7 +971,7 @@ if __name__ == '__main__':
                                            int(UNIT * 40))
     fill_colour = 'bg_colour'
 
-    gui1 = myGUI(window_size, caption, fill_colour)
+    gui1 = MyGUI(window_size, caption, fill_colour)
 
     # Add GUI elements
     block_info = {
@@ -984,7 +988,7 @@ if __name__ == '__main__':
     button1 = gui1.create_button(gui1.window, (10 * UNIT, 4 * UNIT), (6 * UNIT, 14 * UNIT), 'white', 'QUIT')
 
     func_dict = {
-        'left_mouse_up': lambda event: gui1.quit_gui() if button1.checkCollision(event) and button1.held else None,
+        'left_mouse_up': lambda event: gui1.quit_gui() if button1.check_collision(event) and button1.held else None,
         'middle_mouse_up': lambda event: print(1)
     }
     button1.set_mouse_handlers(func_dict)
@@ -993,4 +997,4 @@ if __name__ == '__main__':
 
     gui1.create_dropdown(gui1.window, (16 * UNIT, 4 * UNIT), (18 * UNIT, 2 * UNIT))
 
-    gui1.run_GUI()
+    gui1.run_gui()
