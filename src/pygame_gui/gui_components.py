@@ -10,10 +10,11 @@ Suggestions list:
  - ctrl-z and ctrl-y
  - something with ctrl-s
 """
+from typing import Self
 
-import pyperclip
 import pygame
 import pygame.locals as py_locals
+import pyperclip
 
 UNIT = 10
 KMOD_BASE = 4096
@@ -21,31 +22,28 @@ MARGIN = 10
 
 
 class RootBlock:
+    colours = {
+        'bg_colour': (230, 220, 205),
+        'title_colour': (238, 201, 0),
+        'board_colour': (105, 95, 80),
+        'tile_colour': (134, 122, 102),
+        'black': (0, 0, 0),
+        'white': (255, 255, 255),
+        'offwhite': (240, 240, 240),
+    }
 
-    def __init__(self, **kwargs):
-        if kwargs.get('colour_palette', None) is None:
-            self.colours = {
-                'bg_colour': (230, 220, 205),
-                'title_colour': (238, 201, 0),
-                'board_colour': (105, 95, 80),
-                'tile_colour': (134, 122, 102),
-                'black': (0, 0, 0),
-                'white': (255, 255, 255),
-                'offwhite': (240, 240, 240),
-            }
-        else:
-            self.colours = kwargs['colour_palette']
-
-        self.gui = kwargs['gui']
-
-        self.dimensions = kwargs['dimensions']
-        self.set_colour(kwargs['colour'])
-
-        self.caption = kwargs.get('caption', '')
+    def __init__(self, gui, *_, dimensions, colour, caption='', colour_palette=None, **kwargs):
+        self.gui = gui
+        self.dimensions = dimensions
+        self.colour = None
+        self.caption = caption
+        if colour_palette:
+            self.colours = colour_palette
 
         self.children = set()
         self.surface = None
 
+        self.set_colour(colour)
         self.create_object()
 
     def create_object(self):
@@ -53,10 +51,14 @@ class RootBlock:
         self.surface = pygame.display.set_mode(self.dimensions)
 
     def set_colour(self, colour):
-        if type(colour) is str:
+        if isinstance(colour, str):
             self.colour = self.colours[colour]
-        elif type(colour) is tuple:
+        elif isinstance(colour, tuple):
             self.colour = colour
+        elif isinstance(colour, list):
+            self.colour = tuple(colour)
+        else:
+            raise TypeError(f'Invalid type {type(colour)} for block colour')
 
     def mouse_event_handler(self, event):
         for child in list(self.children):
@@ -76,104 +78,107 @@ class RootBlock:
 
 
 class Block(RootBlock):
+    coordinates: tuple[int, int]
+    alignments: tuple[str, str]
+    margins: tuple[int, int]
 
-    def __init__(self, **kwargs):
+    def __init__(self, gui, parent, *_,
+                 dimensions: tuple[int, int],
+                 colour: str | tuple,
 
-        # Check for overdefined coordinates. Only one constraint should be present for x and y coordinates each.
-        # These can be provided by the following keywords: coordinates, coordx, coordy, alignx, aligny.
+                 coordinates: tuple[int, int] | None = None,
+                 coord_x: int | None = None,
+                 coord_y: int | None = None,
+
+                 alignment: str | tuple[str, str] | None,
+                 align_x: str | None = None,
+                 align_y: str | None = None,
+
+                 margin: int | tuple[int, int] | None = None,
+                 margin_x: int | None = None,
+                 margin_y: int | None = None,
+
+                 priority: int = 0,
+                 polygon=None,
+
+                 **kwargs):
+        self.translate_positional_requirements(
+            coordinates, coord_x, coord_y,
+            alignment, align_x, align_y,
+            margin, margin_x, margin_y
+        )
+
+        super().__init__(gui,
+            dimensions=dimensions,
+            coordinates=coordinates,
+            colour=colour)
+
+        self.parent = parent
+        self.priority = priority
+        self.polygon = polygon
+
+        self.parent.add_child(self)
+
+    def translate_positional_requirements(self,
+                                          coordinates, coord_x, coord_y,
+                                          alignment, align_x, align_y,
+                                          margin, margin_x, margin_y
+                                          ):
+        # Check for overdefined coordinates. Exactly one constraint should be present for x and y coordinates each.
+        # These can be provided by the following keywords: coordinates, coord_x, coord_y, alignment, align_x, align_y.
         # Alignment options are left, centre, right for x and top, center, bottom for y.
-        x_count, y_count = 0, 0
-        alignx, aligny = None, None
-        if kwargs.get('coordinates', None) is not None:
-            self.coordinates = kwargs['coordinates']
-            assert len(self.coordinates) == 2, ("An incorrect number of coordinates where provided. "
-                                                "Either provide two coordinates or use the coordx, coordy, alignx and aligny arguments.")
-            self.coordinates = tuple(self.coordinates)
-            x_count += 1
-            y_count += 1
+        assert len([x for x in [coordinates[0], coord_x, align_x] if x is not None]) == 1, "X coordinates are over- or underdefined"
+        assert len([x for x in [coordinates[1], coord_y, align_y] if x is not None]) == 1, "Y coordinates are over- or underdefined"
+
+        if coordinates is not None:
+            self.coordinates = tuple(coordinates)
         else:
-            self.coordinates = [None, None]
+            self.coordinates = coord_x, coord_y
 
-        if kwargs.get('coordx', None) is not None:
-            assert type(kwargs.get('coordx', None)) is int
-            self.coordinates[0] = kwargs['coordx']
-            x_count += 1
-        if kwargs.get('coordy', None) is not None:
-            assert type(kwargs.get('coordy', None)) is int
-            self.coordinates[1] = kwargs['coordy']
-            y_count += 1
-        if kwargs.get('alignx', None) is not None:
-            alignx = kwargs['alignx']
-            x_count += 1
-        if kwargs.get('aligny', None) is not None:
-            aligny = kwargs['aligny']
-            y_count += 1
-        assert x_count == 1 and y_count == 1, "Coordinates are over- or underdefined"
-
-        self.parent = kwargs['parent']
-        self.alignment = alignx, aligny
-        self.priority = kwargs.get('priority', 0)
-        self.polygon = kwargs.get('polygon', None)
+        if alignment is not None:
+            if isinstance(alignment, str):
+                self.alignments = alignment, alignment
+            elif isinstance(alignment, list):
+                self.alignments = tuple(alignment)
+        else:
+            self.alignments = align_x, align_y
 
         # Define the margins of the block relative to its parents.
         # Only used in the case of calculating coordinates from alignment.
-        margin = kwargs.get('margin', None)
+        assert len([x for x in [margin[0], margin_x] if x is not None]) == 1, "X margin is over- or underdefined"
+        assert len([x for x in [margin[1], margin_y] if x is not None]) == 1, "Y margin is over- or underdefined"
+
         if margin is not None:
-            if type(margin) is int:
-                self.margin = margin, margin
-            elif type(margin) is list:
-                self.margin = tuple(margin)
+            if isinstance(margin, int):
+                self.margins = margin, margin
+            elif isinstance(margin, list):
+                self.margins = tuple(margin)
             else:
                 raise TypeError(f"'margin' should be one of NoneType, int, list or tuple. {type(margin)} was provided.")
-
-            assert len(self.margin) == 2, "'margin' should be an integer or tuple/list of 2 integers."
-            assert kwargs.get('marginx', None) is None, "Do not provide 'marginx' at the same time as 'margin'"
-            assert kwargs.get('marginy', None) is None, "Do not provide 'marginy' at the same time as 'margin'"
         else:
-            self.margin = [0, 0]
-            marginx = kwargs.get('marginx', None)
-            if marginx is not None:
-                assert type(marginx) is int, "'marginx' must be of type int"
-                self.margin[0] = marginx
+            self.margins = margin_x, margin_y
+            
+        align_x, align_y = self.alignments
+        margin_x, margin_y = self.margins
+        if align_x:
+            if align_x == 'left':
+                self.coordinates[0] = margin_x
+            elif align_x == 'centre':
+                self.coordinates[0] = (self.parent.dimensions[0] - self.dimensions[0]) // 2
+            elif align_x == 'right':
+                self.coordinates[0] = self.parent.dimensions[0] - self.dimensions[0] - margin_x
+            elif align_x is not None:
+                raise ValueError(f'{align_x} is not a valid alignment.')
 
-            marginy = kwargs.get('marginy', None)
-            if marginy is not None:
-                assert type(marginy) is int, "'marginy' must be of type int"
-                self.margin[1] = marginy
-
-        super().__init__(**kwargs)
-
-    def create_object(self):
-        if type(self.coordinates) is list:  # Indicates that one or both coordinates were not provided
-            if any(self.alignment):  # This should always be true if the coordinates have the proper amount of definition
-
-                # Look to collapse this structure in the future
-
-                alignx, aligny = self.alignment
-                marginx, marginy = self.margin
-                if alignx == 'left':
-                    self.coordinates[0] = marginx
-                elif alignx == 'centre':
-                    self.coordinates[0] = (self.parent.dimensions[0] - self.dimensions[0]) // 2
-                elif alignx == 'right':
-                    self.coordinates[0] = self.parent.dimensions[0] - self.dimensions[0] - marginx
-                elif alignx is not None:
-                    raise ValueError(f'{alignx} is not a valid alignment.')
-
-                if aligny == 'top':
-                    self.coordinates[1] = marginy
-                elif aligny == 'centre':
-                    self.coordinates[1] = (self.parent.dimensions[1] - self.dimensions[1]) // 2
-                elif aligny == 'bottom':
-                    self.coordinates[1] = self.parent.dimensions[1] - self.dimensions[1] - marginy
-                elif aligny is not None:
-                    raise ValueError(f'{aligny} is not a valid alignment.')
-            else:
-                raise AssertionError("An error has occurred. Potentially, coordinates are underdefined.")
-
-            self.coordinates = tuple(self.coordinates)
-
-        self.parent.children.add(self)
+        if align_y:
+            if align_y == 'top':
+                self.coordinates[1] = margin_y
+            elif align_y == 'centre':
+                self.coordinates[1] = (self.parent.dimensions[1] - self.dimensions[1]) // 2
+            elif align_y == 'bottom':
+                self.coordinates[1] = self.parent.dimensions[1] - self.dimensions[1] - margin_y
+            elif align_y is not None:
+                raise ValueError(f'{align_y} is not a valid alignment.')
 
     def __delitem__(self):
         for child in self.children.copy():
@@ -182,6 +187,9 @@ class Block(RootBlock):
         self.parent.children.remove(self)
 
         self = None
+
+    def add_child(self, block: Self):
+        self.children.add(block)
 
     def create_surface(self):
         block = pygame.Surface(self.dimensions)
@@ -596,7 +604,7 @@ class Dropdown(Block):
     def __init__(self, **kwargs):
         # Check for overdefined coordinates
         x_count, y_count = 0, 0
-        alignx, aligny = None, None
+        align_x, align_y = None, None
         if kwargs.get('coordinates', None) is not None:
             self.coordinates = kwargs['coordinates']
             x_count += 1
@@ -604,45 +612,45 @@ class Dropdown(Block):
         else:
             self.coordinates = [None, None]
 
-        if kwargs.get('coordx', None) is not None:
-            self.coordinates[0] = kwargs['coordx']
+        if kwargs.get('coord_x', None) is not None:
+            self.coordinates[0] = kwargs['coord_x']
             x_count += 1
-        if kwargs.get('coordy', None) is not None:
-            self.coordinates[1] = kwargs['coordy']
+        if kwargs.get('coord_y', None) is not None:
+            self.coordinates[1] = kwargs['coord_y']
             y_count += 1
-        if kwargs.get('alignx', None) is not None:
-            alignx = kwargs['alignx']
+        if kwargs.get('align_x', None) is not None:
+            align_x = kwargs['align_x']
             x_count += 1
-        if kwargs.get('aligny', None) is not None:
-            aligny = kwargs['aligny']
+        if kwargs.get('align_y', None) is not None:
+            align_y = kwargs['align_y']
             y_count += 1
         assert x_count == 1 and y_count == 1
 
-        self.alignment = alignx, aligny
+        self.alignments = align_x, align_y
         self.gui = kwargs['gui']
         self.parent = kwargs['parent']
         self.dimensions = kwargs['dimensions']
 
         if type(self.coordinates) is list:
-            if any(self.alignment):
-                alignx, aligny = self.alignment
-                if alignx == 'left':
+            if any(self.alignments):
+                align_x, align_y = self.alignments
+                if align_x == 'left':
                     self.coordinates[0] = 0
-                elif alignx == 'centre':
+                elif align_x == 'centre':
                     self.coordinates[0] = (self.parent.dimensions[0] - self.dimensions[0]) // 2
-                elif alignx == 'right':
+                elif align_x == 'right':
                     self.coordinates[0] = self.parent.dimensions[0] - self.dimensions[0]
-                elif alignx is not None:
-                    raise ValueError(f'{alignx} is not a valid alignment.')
+                elif align_x is not None:
+                    raise ValueError(f'{align_x} is not a valid alignment.')
 
-                if aligny == 'top':
+                if align_y == 'top':
                     self.coordinates[1] = 0
-                elif aligny == 'centre':
+                elif align_y == 'centre':
                     self.coordinates[1] = (self.parent.dimensions[1] - self.dimensions[1]) // 2
-                elif aligny == 'bottom':
+                elif align_y == 'bottom':
                     self.coordinates[1] = self.parent.dimensions[1] - self.dimensions[1]
-                elif aligny is not None:
-                    raise ValueError(f'{aligny} is not a valid alignment.')
+                elif align_y is not None:
+                    raise ValueError(f'{align_y} is not a valid alignment.')
 
             self.coordinates = tuple(self.coordinates)
 
