@@ -13,7 +13,7 @@ Suggestions list:
 import pygame
 import pygame.locals as py_locals
 
-from pygame_gui.base_blocks import RootBlock
+from pygame_gui import (Block, Button, Dropdown, KMOD_BASE, RootBlock, Text, TextBox, UNIT)
 
 
 class GUIBase:
@@ -129,30 +129,30 @@ if __name__ == '__main__':
                                            int(UNIT * 40))
     fill_colour = 'bg_colour'
 
-    gui1 = MyGUI(window_size, caption, fill_colour)
+    gui_inst = GUIBase(window_size, caption, fill_colour)
 
     # Add GUI elements
     block_info = {
-        'parent': gui1.window,
+        'parent': gui_inst.window,
         'dimensions': (10 * UNIT, 4 * UNIT),
         'coordinates': (6 * UNIT, 2 * UNIT),
         'colour': 'white'
     }
 
-    gui1.create_block(**block_info)
+    gui_inst.create_block(**block_info)
 
-    gui1.create_text(gui1.window, (10 * UNIT, 4 * UNIT), (6 * UNIT, 8 * UNIT), 'white', 'Test')
+    gui_inst.create_text(gui_inst.window, (10 * UNIT, 4 * UNIT), (6 * UNIT, 8 * UNIT), 'white', 'Test')
 
-    button1 = gui1.create_button(gui1.window, (10 * UNIT, 4 * UNIT), (6 * UNIT, 14 * UNIT), 'white', 'QUIT')
+    button1 = gui_inst.create_button(gui_inst.window, (10 * UNIT, 4 * UNIT), (6 * UNIT, 14 * UNIT), 'white', 'QUIT')
 
     func_dict = {
-        'left_mouse_up': lambda event: gui1.quit_gui() if button1.check_collision(event) and button1.held else None,
+        'left_mouse_up': lambda event: gui_inst.quit_gui() if button1.check_collision(event) and button1.held else None,
         'middle_mouse_up': lambda event: print(1)
     }
     button1.set_mouse_handlers(func_dict)
 
-    gui1.create_textbox(gui1.window, (16 * UNIT, 4 * UNIT), (6 * UNIT, 20 * UNIT))
+    gui_inst.create_textbox(gui_inst.window, (16 * UNIT, 4 * UNIT), (6 * UNIT, 20 * UNIT))
 
-    gui1.create_dropdown(gui1.window, (16 * UNIT, 4 * UNIT), (18 * UNIT, 2 * UNIT))
+    gui_inst.create_dropdown(gui_inst.window, (16 * UNIT, 4 * UNIT), (18 * UNIT, 2 * UNIT))
 
-    gui1.run_gui()
+    gui_inst.run_gui()

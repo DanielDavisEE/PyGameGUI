@@ -1,6 +1,6 @@
 import unittest
 
-from pygame_gui.gui_components import (Block, Button, Dropdown, MyGUI, RootBlock, Slider, Text, TextBox)
+from pygame_gui.gui_base import (Block, Button, Dropdown, MyGUI, RootBlock, Slider, Text, TextBox)
 
 
 class TestRootBlock(unittest.TestCase):

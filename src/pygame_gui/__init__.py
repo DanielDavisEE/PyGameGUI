@@ -1,4 +1,5 @@
-from base_blocks import (Block, KMOD_BASE, MARGIN, RootBlock, UNIT)
+from base_blocks import (
+    Block, KMOD_BASE, MARGIN, RootBlock, UNIT)
 from button_block import Button
 from dropdown_block import Dropdown
 from slider_block import Slider
