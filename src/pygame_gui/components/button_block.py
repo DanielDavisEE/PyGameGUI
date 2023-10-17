@@ -1,7 +1,6 @@
 import pygame
-import pygame.locals as py_locals
 
-from pygame_gui import Text
+from pygame_gui.components import Text
 
 
 class Button(Text):
@@ -47,7 +46,7 @@ class Button(Text):
 
     def create_rect(self):
         # Create rect object for simplicity of collision detection
-        self.button_rect = py_locals.Rect(self.overall_coords, self.dimensions)
+        self.button_rect = pygame.Rect(self.overall_coords, self.dimensions)
 
     def set_mouse_handlers(self, function_dict):
         for func_name, func in function_dict.items():
@@ -97,7 +96,7 @@ class Button(Text):
         return self.button_rect.collidepoint(mouse_pos)
 
     def keyboard_event_handler(self, event):
-        if event.key == py_locals.RETURN:
+        if event.key == pygame.RETURN:
             self.event_function_dict['left_mouse_up'](event)
 
     def move(self, del_x=0, del_y=0, x=None, y=None):

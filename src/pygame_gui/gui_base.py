@@ -11,67 +11,59 @@ Suggestions list:
  - something with ctrl-s
 """
 import pygame
-import pygame.locals as py_locals
 
-from pygame_gui import (Block, Button, Dropdown, KMOD_BASE, RootBlock, Text, TextBox, UNIT)
+import pygame_gui.components as gui
 
 
 class GUIBase:
-    def __init__(self, *args, **kwargs):
+    refresh_rate = 50
+
+    def __init__(self,
+                 dimensions: tuple[int, int] | None,
+                 bg_colour: str | tuple[int, int, int] = 'white',
+                 caption: str = '',
+                 **kwargs):
         """window_size, caption, win_colour, colour_palette=None -> myGUI
         """
+        self.window = gui.Window(
+            dimensions=dimensions,
+            caption=caption,
+            colour=bg_colour,
+            **kwargs
+        )
 
-        arg_names = ('dimensions', 'caption', 'colour', 'colour_palette')
-        kwargs['gui'] = self
-        for i, arg in enumerate(args):
-            kwargs[arg_names[i]] = arg
-        self.window = RootBlock(**kwargs)
-        self.active_object = None
         self.running = False
+        pygame.key.set_repeat(500, 50)
 
-        self.arg_names = ('parent', 'dimensions', 'coordinates', 'colour', 'text_value', 'text_colour', 'text_size')
+        self._keyboard_event_handlers = {}
+        self.add_keyboard_event_handler(key=pygame.K_ESCAPE, callable=self.quit_gui)
 
-    def run_gui(self):
+    def run(self):
         self.running = True
         pygame.init()
 
         self.window.draw_block()
         pygame.display.flip()
 
-        count = 0
-        delay_time = 20
-
-        pygame.key.set_repeat(500, 50)
         while self.running:
-            pygame.time.delay(delay_time)
+            pygame.time.delay(int(1000 / self.refresh_rate))
 
-            count += 1
-            if self.active_object and count >= 1000 // (2 * delay_time):
-                self.active_object.toggle_cursor()
-                count = 0
+            self.window.clock()
 
             for event in pygame.event.get():
-                # Keyboard Events
-                if event.type == py_locals.KEYDOWN:
-                    if event.key == py_locals.K_ESCAPE:
-                        self.quit_gui()  # Allows user to overwrite quit process
-                    if (event.mod - KMOD_BASE == py_locals.KMOD_LCTRL or
-                            event.mod - KMOD_BASE == py_locals.KMOD_RCTRL or
-                            event.mod - KMOD_BASE == py_locals.KMOD_CTRL):
-                        character = pygame.key.name(event.key)
-                        if character == 's':
-                            self.save()
-                    else:
-                        if self.active_object:
-                            self.active_object.keyboard_event_handler(event)
-
                 if event.type == pygame.QUIT:
                     self.quit_gui()
 
+                # Keyboard Events
+                if event.type in {pygame.KEYDOWN,
+                                  pygame.KEYUP}:
+                    self.run_keyboard_event_handlers(event)
+                    self.window.keyboard_event_handler(event)
+
                 # Mouse Events
-                if (event.type == pygame.MOUSEBUTTONDOWN or
-                        event.type == pygame.MOUSEBUTTONUP or
-                        event.type == pygame.MOUSEMOTION):
+                if event.type in {pygame.MOUSEBUTTONDOWN,
+                                  pygame.MOUSEBUTTONUP,
+                                  pygame.MOUSEMOTION}:
                     self.window.mouse_event_handler(event)
 
             self.window.draw_block()
@@ -82,77 +74,22 @@ class GUIBase:
     def quit_gui(self):
         self.running = False
 
-    def clear_gui(self):
+    def reset_gui(self):
         for child in list(self.window.children):
             child.__delitem__()
 
     def save(self):
         pass
 
-    # -------------------------- Object Creation ----------------------------
+    def add_keyboard_event_handler(self, *, mod=None, key=None, type=None, callable):
+        self._keyboard_event_handlers[(mod, key, type)] = callable
 
-    def create_block(self, *args, **kwargs):
-        kwargs['gui'] = self
-        for i, arg in enumerate(args):
-            kwargs[self.arg_names[i]] = arg
-        return Block(**kwargs)
+    def run_keyboard_event_handlers(self, event):
+        for (mod, key, type), callable in self._keyboard_event_handlers:
 
-    def create_text(self, *args, **kwargs):
-        kwargs['gui'] = self
-        for i, arg in enumerate(args):
-            kwargs[self.arg_names[i]] = arg
-        return Text(**kwargs)
+            mod_match = (mod is None) or (event.mod == mod)
+            key_match = (key is None) or (event.key == key)
+            type_match = (type is None) or (event.type == type)
 
-    def create_button(self, *args, **kwargs):
-        kwargs['gui'] = self
-        for i, arg in enumerate(args):
-            kwargs[self.arg_names[i]] = arg
-        return Button(**kwargs)
-
-    def create_textbox(self, *args, **kwargs):
-        kwargs['gui'] = self
-        for i, arg in enumerate(args):
-            kwargs[self.arg_names[i]] = arg
-        return TextBox(**kwargs)
-
-    def create_dropdown(self, *args, **kwargs):
-        kwargs['gui'] = self
-        for i, arg in enumerate(args):
-            kwargs[self.arg_names[i]] = arg
-        return Dropdown(**kwargs)
-
-
-if __name__ == '__main__':
-    # Create test GUI
-    caption = "Test GUI"
-    window_size = win_width, win_height = (int(UNIT * 70 - 1),
-                                           int(UNIT * 40))
-    fill_colour = 'bg_colour'
-
-    gui_inst = GUIBase(window_size, caption, fill_colour)
-
-    # Add GUI elements
-    block_info = {
-        'parent': gui_inst.window,
-        'dimensions': (10 * UNIT, 4 * UNIT),
-        'coordinates': (6 * UNIT, 2 * UNIT),
-        'colour': 'white'
-    }
-
-    gui_inst.create_block(**block_info)
-
-    gui_inst.create_text(gui_inst.window, (10 * UNIT, 4 * UNIT), (6 * UNIT, 8 * UNIT), 'white', 'Test')
-
-    button1 = gui_inst.create_button(gui_inst.window, (10 * UNIT, 4 * UNIT), (6 * UNIT, 14 * UNIT), 'white', 'QUIT')
-
-    func_dict = {
-        'left_mouse_up': lambda event: gui_inst.quit_gui() if button1.check_collision(event) and button1.held else None,
-        'middle_mouse_up': lambda event: print(1)
-    }
-    button1.set_mouse_handlers(func_dict)
-
-    gui_inst.create_textbox(gui_inst.window, (16 * UNIT, 4 * UNIT), (6 * UNIT, 20 * UNIT))
-
-    gui_inst.create_dropdown(gui_inst.window, (16 * UNIT, 4 * UNIT), (18 * UNIT, 2 * UNIT))
-
-    gui_inst.run_gui()
+            if mod_match and key_match and type_match:
+                callable()

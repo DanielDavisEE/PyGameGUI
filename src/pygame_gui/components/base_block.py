@@ -1,95 +1,21 @@
-from enum import IntEnum
 from typing import Self
 
 import pygame
-
-UNIT = 10
-KMOD_BASE = 4096
-MARGIN = 10
+from pygame_gui.components import Window
 
 
-class Alignments(IntEnum):
-    # x alignments
-    LEFT: 0
-    CENTRE: 1
-    RIGHT: 2
-
-    # y alignments
-    TOP: 0
-    CENTRE: 1
-    BOTTOM: 2
-
-
-class RootBlock:
-    colours = {
-        'bg_colour': (230, 220, 205),
-        'title_colour': (238, 201, 0),
-        'board_colour': (105, 95, 80),
-        'tile_colour': (134, 122, 102),
-        'black': (0, 0, 0),
-        'white': (255, 255, 255),
-        'offwhite': (240, 240, 240),
-    }
-
-    def __init__(self, gui, *_, dimensions, colour, caption='', colour_palette=None, **kwargs):
-        self.gui = gui
-        self.dimensions = dimensions
-        self.colour = None
-        self.caption = caption
-        if colour_palette:
-            self.colours = colour_palette
-
-        self.children = set()
-        self.surface = None
-
-        self.set_colour(colour)
-        self.create_object()
-
-    def create_object(self):
-        pygame.display.set_caption(self.caption)
-        self.surface = pygame.display.set_mode(self.dimensions)
-
-    def set_colour(self, colour):
-        if isinstance(colour, str):
-            self.colour = self.colours[colour]
-        elif isinstance(colour, tuple):
-            self.colour = colour
-        elif isinstance(colour, list):
-            self.colour = tuple(colour)
-        else:
-            raise TypeError(f'Invalid type {type(colour)} for block colour')
-
-    def mouse_event_handler(self, event):
-        for child in list(self.children):
-            child.mouse_event_handler(event)
-
-    def keyboard_event_handler(self, event):
-        pass
-
-    def blit_text(self):
-        pass
-
-    def draw_block(self):
-        self.surface.fill(self.colour)
-
-        for child in sorted(self.children, key=lambda x: x.priority):
-            child.draw_block()
-
-
-class Block(RootBlock):
+class Block(Window):
     coordinates: tuple[int, int]
     alignments: tuple[str, str]
     margins: tuple[int, int]
 
-    def __init__(self, gui, parent, *_,
-                 dimensions: tuple[int, int],
-                 colour: str | tuple,
+    def __init__(self, parent: Self | None = None, *_,
 
                  coordinates: tuple[int, int] | None = None,
                  coord_x: int | None = None,
                  coord_y: int | None = None,
 
-                 alignment: str | tuple[str, str] | None,
+                 alignment: str | tuple[str, str] | None = None,
                  align_x: str | None = None,
                  align_y: str | None = None,
 
@@ -101,16 +27,13 @@ class Block(RootBlock):
                  polygon=None,
 
                  **kwargs):
+        super().__init__(**kwargs)
+
         self.translate_positional_requirements(
             coordinates, coord_x, coord_y,
             alignment, align_x, align_y,
             margin, margin_x, margin_y
         )
-
-        super().__init__(gui,
-            dimensions=dimensions,
-            coordinates=coordinates,
-            colour=colour)
 
         self.parent = parent
         self.priority = priority
@@ -179,6 +102,19 @@ class Block(RootBlock):
             elif align_y is not None:
                 raise ValueError(f'{align_y} is not a valid alignment.')
 
+    def _create_surface(self):
+        self.surface = pygame.Surface(self.dimensions).convert()
+        self.surface.fill(self.colour)
+
+    def draw_block(self):
+        super().draw_block()
+
+        self.blit_text()
+        if self.polygon:
+            pygame.draw.polygon(self.surface, *self.polygon)
+
+        self.parent.surface.blit(self.surface, self.coordinates)
+
     def __delitem__(self):
         for child in self.children.copy():
             child.__delitem__()
@@ -190,24 +126,15 @@ class Block(RootBlock):
     def add_child(self, block: Self):
         self.children.add(block)
 
-    def create_surface(self):
-        block = pygame.Surface(self.dimensions)
-        block = block.convert()
-        block.fill(self.colour)
-        self.surface = block
+    def move(self,
+             del_x: int = 0,
+             del_y: int = 0,
 
-    def move(self, del_x=0, del_y=0, x=None, y=None):
+             x: int = None,
+             y: int = None):
         # Update coordinates
-        self.coordinates = tuple([x, y])
+        self.coordinates = x, y
 
-    def draw_block(self):
-        self.create_surface()
-        self.blit_text()
 
-        for child in sorted(self.children, key=lambda x: x.priority):
-            child.draw_block()
-
-        if self.polygon:
-            pygame.draw.polygon(self.surface, *self.polygon)
-
-        self.parent.surface.blit(self.surface, self.coordinates)
+if __name__ == '__main__':
+    pass

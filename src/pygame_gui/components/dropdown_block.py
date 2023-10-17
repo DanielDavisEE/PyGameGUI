@@ -1,4 +1,4 @@
-from pygame_gui import (Block, Button, MARGIN, Slider, TextBox)
+from pygame_gui import (Block, Button, Slider, TextBox)
 
 
 class Dropdown(Block):
@@ -180,7 +180,7 @@ class Dropdown(Block):
             y_coord_tmp += parent_tmp.coordinates[1]
             parent_tmp = parent_tmp.parent
 
-        available_space = parent_tmp.surface.get_height() - (y_coord_tmp + total_height + MARGIN)
+        available_space = parent_tmp.surface.get_height() - (y_coord_tmp + total_height + self._MARGIN)
         max_items = min(len(self.options_list), available_space // item_height)
 
         dropdown_dimensions = total_width, max_items * item_height

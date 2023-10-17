@@ -1,8 +1,7 @@
 import pygame
-import pygame.locals as py_locals
 import pyperclip
 
-from pygame_gui import Button, KMOD_BASE, MARGIN
+from pygame_gui.components import KMOD_BASE, Button
 
 
 class TextBox(Button):
@@ -58,7 +57,7 @@ class TextBox(Button):
                 self.move_cursor(len(self.second_text['value']))
                 self.gui.active_object = None
 
-        self.colour = self.colours[self.tb_colours[self.active]]
+        self.colour = self.colour_palette[self.tb_colours[self.active]]
 
     def move_cursor(self, amount):
         if amount < 0 and len(self.primary_text['value']) > 0:
@@ -73,9 +72,9 @@ class TextBox(Button):
 
         if self.active:
 
-            if self.primary_text['pos'].width + self.cursor_info['pos'].width > (self.dimensions[0] - 2 * MARGIN):
+            if self.primary_text['pos'].width + self.cursor_info['pos'].width > (self.dimensions[0] - 2 * self._MARGIN):
                 self.primary_text['pos'] = (self.primary_text['text'].get_rect(
-                    right=(self.dimensions[0] - MARGIN) - self.cursor_info['pos'].width,
+                    right=(self.dimensions[0] - self._MARGIN) - self.cursor_info['pos'].width,
                     centery=self.primary_text['pos'].centery))
 
             second_text_left = self.cursor_info['pos'].right
@@ -107,9 +106,7 @@ class TextBox(Button):
         super().remove_text(amount)
 
     def keyboard_event_handler(self, event):
-        if (event.mod - KMOD_BASE == py_locals.KMOD_LCTRL or
-                event.mod - KMOD_BASE == py_locals.KMOD_RCTRL or
-                event.mod - KMOD_BASE == py_locals.KMOD_CTRL):
+        if (event.mod - KMOD_BASE) in {pygame.KMOD_LCTRL, pygame.KMOD_RCTRL, pygame.KMOD_CTRL}:
             character = pygame.key.name(event.key)
             if character == 'x':
                 pyperclip.copy(self.primary_text['value'] + self.second_text['value'])
@@ -124,15 +121,15 @@ class TextBox(Button):
 
             elif character in ['a', 's', 'z', 'y', 'x', 'c', 'v']:
                 print('Get to this...')
-        elif event.key == py_locals.K_RETURN:
+        elif event.key == pygame.K_RETURN:
             pass
-        elif event.key == py_locals.K_BACKSPACE:
+        elif event.key == pygame.K_BACKSPACE:
             self.remove_text()
-        elif event.key == py_locals.K_DELETE:
+        elif event.key == pygame.K_DELETE:
             self.second_text['value'] = self.second_text['value'][1:]
-        elif event.key == py_locals.K_LEFT:
+        elif event.key == pygame.K_LEFT:
             self.move_cursor(-1)
-        elif event.key == py_locals.K_RIGHT:
+        elif event.key == pygame.K_RIGHT:
             self.move_cursor(1)
         else:
             self.append_text(event.unicode)

@@ -1,6 +1,6 @@
 import pygame
 
-from pygame_gui import Block, MARGIN
+from pygame_gui.components import Block
 
 
 class Text(Block):
@@ -22,8 +22,8 @@ class Text(Block):
 
         super().__init__(**kwargs)
 
-    def create_object(self):
-        super().create_object()
+    def _create_surface(self):
+        super()._create_surface()
 
         try:
             self.font = pygame.font.Font(None, self.font)
@@ -31,7 +31,7 @@ class Text(Block):
             pygame.init()
             self.font = pygame.font.Font(None, self.font)
 
-        self.font_colour = self.colours[self.font_colour]
+        self.font_colour = self.colour_palette[self.font_colour]
 
     def update_text(self):
         centre_coords = [int(n // 2) for n in self.dimensions]
@@ -39,14 +39,14 @@ class Text(Block):
         self.primary_text['text'] = self.font.render(self.primary_text['value'], 1, self.font_colour)
         if self.text_alignment == 'left':
             self.primary_text['pos'] = (self.primary_text['text'].get_rect(
-                left=MARGIN,
+                left=self._MARGIN,
                 centery=centre_coords[1]))
         elif self.text_alignment == 'centre':
             self.primary_text['pos'] = (self.primary_text['text'].get_rect(
                 center=centre_coords))
         elif self.text_alignment == 'right':
             self.primary_text['pos'] = (self.primary_text['text'].get_rect(
-                right=(self.dimensions[0] - MARGIN),
+                right=(self.dimensions[0] - self._MARGIN),
                 centery=centre_coords[1]))
 
     def set_text(self, text):
@@ -58,9 +58,9 @@ class Text(Block):
     def append_text(self, text):
         self.primary_text['value'] += text
 
-    def remove_text(self, amount=-1):
-        assert amount < 0
-        self.primary_text['value'] = self.primary_text['value'][:amount]
+    def remove_text(self, amount=1):
+        assert amount > 0
+        self.primary_text['value'] = self.primary_text['value'][:-amount]
 
     def blit_text(self):
         self.update_text()
