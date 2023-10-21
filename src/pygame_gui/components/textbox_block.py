@@ -17,13 +17,13 @@ class TextBox(Button):
 
         self.cursor_info = {
             'on': False,
-            'text': None,
-            'pos': None
+            'surface': None,
+            'rect': None
         }
         self.second_text = {
             'value': '',
-            'text': None,
-            'pos': None
+            'surface': None,
+            'rect': None
         }
 
         kwargs['colour'] = self.tb_colours[self.active]
@@ -37,12 +37,12 @@ class TextBox(Button):
 
     def update_cursor(self):
 
-        text_rect = self.primary_text['pos']
+        text_rect = self.primary_text['rect']
 
         cursor_colour = self.font_colour if self.cursor_info['on'] else self.colour
 
-        self.cursor_info['text'] = self.font.render('|', 1, cursor_colour)
-        self.cursor_info['pos'] = self.cursor_info['text'].get_rect(
+        self.cursor_info['surface'] = self.font.render('|', 1, cursor_colour)
+        self.cursor_info['rect'] = self.cursor_info['surface'].get_rect(
             left=text_rect.right,
             centery=text_rect.centery)
 
@@ -73,22 +73,22 @@ class TextBox(Button):
 
         if self.active:
 
-            if self.primary_text['pos'].width + self.cursor_info['pos'].width > (self.dimensions[0] - 2 * self._MARGIN):
-                self.primary_text['pos'] = (self.primary_text['text'].get_rect(
-                    right=(self.dimensions[0] - self._MARGIN) - self.cursor_info['pos'].width,
-                    centery=self.primary_text['pos'].centery))
+            if self.primary_text['rect'].width + self.cursor_info['rect'].width > (self.dimensions[0] - 2 * self._MARGIN):
+                self.primary_text['rect'] = (self.primary_text['surface'].get_rect(
+                    right=(self.dimensions[0] - self._MARGIN) - self.cursor_info['rect'].width,
+                    centery=self.primary_text['rect'].centery))
 
-            second_text_left = self.cursor_info['pos'].right
+            second_text_left = self.cursor_info['rect'].right
 
         else:
-            second_text_left = self.primary_text['pos'].right
+            second_text_left = self.primary_text['rect'].right
 
         self.update_cursor()
 
-        self.second_text['text'] = self.font.render(self.second_text['value'], 1, self.font_colour)
-        self.second_text['pos'] = self.second_text['text'].get_rect(
+        self.second_text['surface'] = self.font.render(self.second_text['value'], 1, self.font_colour)
+        self.second_text['rect'] = self.second_text['surface'].get_rect(
             left=second_text_left,
-            centery=self.primary_text['pos'].centery)
+            centery=self.primary_text['rect'].centery)
 
     def toggle_cursor(self):
         self.cursor_info['on'] = not self.cursor_info['on']
@@ -139,5 +139,5 @@ class TextBox(Button):
 
     def blit_text(self):
         super().blit_text()
-        self.surface.blit(self.cursor_info['text'], self.cursor_info['pos'])
-        self.surface.blit(self.second_text['text'], self.second_text['pos'])
+        self.surface.blit(self.cursor_info['surface'], self.cursor_info['rect'])
+        self.surface.blit(self.second_text['surface'], self.second_text['rect'])

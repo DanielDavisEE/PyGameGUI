@@ -7,13 +7,11 @@ class ExampleGUI(GUIBase):
         super().__init__(*args, **kwargs)
 
         # Add GUI elements
-        block_info = {
-            'dimensions': (100, 40),
-            'coordinates': (60, 20),
-            'colour': 'white'
-        }
-
-        gui.Block(self.window, **block_info)
+        gui.Block(
+            self.window,
+            dimensions=(100, 40),
+            coordinates=(60, 20),
+            colour='white')
 
         gui.Text(
             self.window,
@@ -22,22 +20,23 @@ class ExampleGUI(GUIBase):
             colour='white',
             text_value='Test')
 
-        button1 = gui.Button(
-            self.window,
-            dimensions=(100, 40),
-            coordinates=(60, 140),
-            colour='white',
-            text_value='QUIT')
+        # button1 = gui.Button(
+        #     self.window,
+        #     dimensions=(100, 40),
+        #     coordinates=(60, 140),
+        #     colour='white',
+        #     text_value='QUIT')
 
-        func_dict = {
-            'left_mouse_up': lambda event: self.quit_gui() if button1.check_collision(event) and button1.held else None,
-            'middle_mouse_up': lambda event: print(1)
-        }
-        button1.set_mouse_handlers(func_dict)
+        # func_dict = {
+        #     'left_mouse_up': lambda event: self.quit_gui() if button1.check_collision(event) and button1.held else None,
+        #     'middle_mouse_up': lambda event: print(1)
+        # }
+        # button1.set_mouse_handlers(func_dict)
 
-        gui.TextBox(self.window,
-            dimensions=(160, 40),
-            coordinates=(60, 200))
+        # gui.TextBox(
+        #     self.window,
+        #     dimensions=(160, 40),
+        #     coordinates=(60, 200))
 
         # gui.Dropdown(self.window,
         #     dimensions=(16, 4),
