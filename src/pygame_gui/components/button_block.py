@@ -1,11 +1,11 @@
 import pygame
 
-from pygame_gui.components import Text
+from pygame_gui.components.text_block import Text
 
 
 class Button(Text):
 
-    def __init__(self, **kwargs):
+    def __init__(self, parent, **kwargs):
         self.held = False
         self.event_function_dict = {
             'left_mouse_down': lambda *_: None,
@@ -18,7 +18,7 @@ class Button(Text):
             'move_mouse': lambda *_: None,
         }
 
-        super().__init__(**kwargs)
+        super().__init__(parent, **kwargs)
 
         def hold_down(event):
             if self.check_collision(event):

@@ -1,3 +1,5 @@
+from typing import Self
+
 import pygame
 
 
@@ -20,8 +22,8 @@ class Window:
                  colour_palette: dict[str, tuple[int, int, int]] = None,
                  **kwargs):
         self.dimensions = dimensions
-        self.colour = self.translate_colour_input(colour)
         self.colour_palette = colour_palette or self.base_colours
+        self.colour = self._translate_colour_input(colour)
         self.caption = caption
 
         self.active = False
@@ -40,7 +42,7 @@ class Window:
         for child in sorted(self.children, key=lambda x: x.priority):
             child.draw_block()
 
-    def translate_colour_input(self, colour):
+    def _translate_colour_input(self, colour):
         if isinstance(colour, str):
             colour = self.colour_palette[colour]
         elif isinstance(colour, tuple):
@@ -61,5 +63,9 @@ class Window:
     def blit_text(self):
         pass
 
-    def clock(self):
-        pass
+    def add_child(self, block: Self):
+        self.children.add(block)
+
+    def tick(self):
+        for child in list(self.children):
+            child.tick()

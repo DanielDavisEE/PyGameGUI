@@ -1,12 +1,13 @@
 import pygame
 import pyperclip
 
-from pygame_gui.components import KMOD_BASE, Button
+from pygame_gui.components.constants import KMOD_BASE
+from pygame_gui.components.button_block import Button
 
 
 class TextBox(Button):
 
-    def __init__(self, **kwargs):
+    def __init__(self, parent, **kwargs):
 
         self.active = False
         self.tb_colours = {
@@ -28,7 +29,7 @@ class TextBox(Button):
         kwargs['colour'] = self.tb_colours[self.active]
         kwargs['text_alignment'] = 'left'
 
-        super().__init__(**kwargs)
+        super().__init__(parent, **kwargs)
 
         self.set_mouse_handlers({'left_mouse_down': self.toggle_select})
 

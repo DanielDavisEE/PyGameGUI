@@ -8,16 +8,26 @@ class ExampleGUI(GUIBase):
 
         # Add GUI elements
         block_info = {
-            'dimensions': (10, 4),
-            'coordinates': (6, 2),
+            'dimensions': (100, 40),
+            'coordinates': (60, 20),
             'colour': 'white'
         }
 
         gui.Block(self.window, **block_info)
 
-        gui.Text(self.window, (10, 4), (6, 8), 'white', 'Test')
+        gui.Text(
+            self.window,
+            dimensions=(100, 40),
+            coordinates=(60, 80),
+            colour='white',
+            text_value='Test')
 
-        button1 = gui.Button(self.window, (10, 4), (6, 14), 'white', 'QUIT')
+        button1 = gui.Button(
+            self.window,
+            dimensions=(100, 40),
+            coordinates=(60, 140),
+            colour='white',
+            text_value='QUIT')
 
         func_dict = {
             'left_mouse_up': lambda event: self.quit_gui() if button1.check_collision(event) and button1.held else None,
@@ -25,14 +35,18 @@ class ExampleGUI(GUIBase):
         }
         button1.set_mouse_handlers(func_dict)
 
-        gui.TextBox(self.window, (16, 4), (6, 20))
+        gui.TextBox(self.window,
+            dimensions=(160, 40),
+            coordinates=(60, 200))
 
-        gui.Dropdown(self.window, (16, 4), (18, 2))
+        # gui.Dropdown(self.window,
+        #     dimensions=(16, 4),
+        #     coordinates=(18, 2))
 
 
 if __name__ == '__main__':
     gui_inst = ExampleGUI(
-        dimensions=(70, 40),
+        dimensions=(700, 400),
         caption="Example GUI",
         bg_colour='bg_colour'
     )

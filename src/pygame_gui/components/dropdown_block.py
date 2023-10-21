@@ -1,9 +1,12 @@
-from pygame_gui import (Block, Button, Slider, TextBox)
+from pygame_gui.components.base_block import Block
+from pygame_gui.components.button_block import Button
+from pygame_gui.components.slider_block import Slider
+from pygame_gui.components.textbox_block import TextBox
 
 
 class Dropdown(Block):
 
-    def __init__(self, **kwargs):
+    def __init__(self, parent, **kwargs):
         # Check for overdefined coordinates
         x_count, y_count = 0, 0
         align_x, align_y = None, None
@@ -29,7 +32,6 @@ class Dropdown(Block):
         assert x_count == 1 and y_count == 1
 
         self.alignments = align_x, align_y
-        self.gui = kwargs['gui']
         self.parent = kwargs['parent']
         self.dimensions = kwargs['dimensions']
 

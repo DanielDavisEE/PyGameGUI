@@ -1,4 +1,4 @@
-from pygame_gui import Button
+from pygame_gui.components.button_block import Button
 
 
 class Slider(Button):

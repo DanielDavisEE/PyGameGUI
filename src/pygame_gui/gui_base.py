@@ -25,6 +25,8 @@ class GUIBase:
                  **kwargs):
         """window_size, caption, win_colour, colour_palette=None -> myGUI
         """
+        pygame.init()
+        
         self.window = gui.Window(
             dimensions=dimensions,
             caption=caption,
@@ -48,7 +50,7 @@ class GUIBase:
         while self.running:
             pygame.time.delay(int(1000 / self.refresh_rate))
 
-            self.window.clock()
+            self.window.tick()
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
