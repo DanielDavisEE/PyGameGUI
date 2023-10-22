@@ -1,4 +1,5 @@
 from typing import Self
+import logging
 
 import pygame
 
@@ -21,6 +22,8 @@ class Window:
                  colour: str | tuple[int, int, int] = 'white',
                  colour_palette: dict[str, tuple[int, int, int]] = None,
                  **kwargs):
+        self.log = logging.getLogger()
+
         self.dimensions = dimensions
         self.colour_palette = colour_palette or self.base_colours
         self.colour = self._translate_colour_input(colour)
@@ -30,13 +33,16 @@ class Window:
         self.surface = None
         self.children = set()
 
-        self.surface = self._create_surface()
+        self.surface = None
 
     def _create_surface(self):
         pygame.display.set_caption(self.caption)
-        return pygame.display.set_mode(self.dimensions)
+        self.surface = pygame.display.set_mode(self.dimensions)
 
     def draw_block(self):
+        if not self.surface:
+            self._create_surface()
+
         self.surface.fill(self.colour)
 
         for child in sorted(self.children, key=lambda x: x.priority):
@@ -54,6 +60,10 @@ class Window:
         return colour
 
     def mouse_event_handler(self, event):
+        assert event.type in {pygame.MOUSEBUTTONDOWN,
+                              pygame.MOUSEBUTTONUP,
+                              pygame.MOUSEMOTION}
+
         for child in list(self.children):
             child.mouse_event_handler(event)
 

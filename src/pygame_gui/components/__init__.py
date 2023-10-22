@@ -1,4 +1,4 @@
-from pygame_gui.components.constants import Alignment
+from pygame_gui.components.constants import MouseEvents, Alignment
 from pygame_gui.components.window import Window
 from pygame_gui.components.base_block import Block
 from pygame_gui.components.text_block import Text

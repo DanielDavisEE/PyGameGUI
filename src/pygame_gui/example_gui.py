@@ -1,5 +1,6 @@
 from pygame_gui.gui_base import GUIBase
 import pygame_gui.components as gui
+from pygame_gui.components import MouseEvents
 
 
 class ExampleGUI(GUIBase):
@@ -28,8 +29,8 @@ class ExampleGUI(GUIBase):
             text_value='QUIT')
 
         func_dict = {
-            'left_mouse_up': lambda event: self.quit_gui() if button1.check_collision(event) and button1.held else None,
-            'middle_mouse_up': lambda event: print(1)
+            MouseEvents.LEFT_MOUSE_UP: lambda event: self.quit_gui() if button1.check_collision(event) and button1.held else None,
+            MouseEvents.MIDDLE_MOUSE_UP: lambda event: print(1)
         }
         button1.set_mouse_handlers(func_dict)
 

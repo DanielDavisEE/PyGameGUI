@@ -1,46 +1,54 @@
 import pygame
+from pygame import K_RETURN
 
+from pygame_gui.components.constants import MouseEvents
 from pygame_gui.components.text_block import Text
 
 
 class Button(Text):
 
     def __init__(self, parent, **kwargs):
-        self.held = False
-        self.event_function_dict = {
-            'left_mouse_down': lambda *_: None,
-            'right_mouse_down': lambda *_: None,
-            'middle_mouse_down': lambda *_: None,
-            'left_mouse_up': lambda *_: None,
-            'right_mouse_up': lambda *_: None,
-            'middle_mouse_up': lambda *_: None,
-            'scroll_mouse': lambda *_: None,
-            'move_mouse': lambda *_: None,
-        }
-
         super().__init__(parent, **kwargs)
 
-        def hold_down(event):
+        self.held = False
+        self.event_function_dict = {
+            MouseEvents.LEFT_MOUSE_UP: lambda *_: None,
+            MouseEvents.MIDDLE_MOUSE_UP: lambda *_: None,
+            MouseEvents.RIGHT_MOUSE_UP: lambda *_: None,
+            MouseEvents.SCROLL_MOUSE_UP: lambda *_: None,
+
+            MouseEvents.LEFT_MOUSE_DOWN: lambda *_: None,
+            MouseEvents.MIDDLE_MOUSE_DOWN: lambda *_: None,
+            MouseEvents.RIGHT_MOUSE_DOWN: lambda *_: None,
+            MouseEvents.SCROLL_MOUSE_DOWN: lambda *_: None,
+
+            MouseEvents.MOVE_MOUSE: lambda *_: None,
+        }
+
+        def _hold_down(event):
             if self.check_collision(event):
+                self.log.debug(f'Holding {self}')
                 self.held = True
 
-        def release(event):
-            self.held = False
+        def _release(event):
+            if self.held:
+                self.log.debug(f'Releasing {self}')
+                self.held = False
 
-        self.default_mouse_handlers = {'left_mouse_down': hold_down,
-                                       'left_mouse_up': release}
+        self.default_mouse_handlers = {MouseEvents.LEFT_MOUSE_DOWN: _hold_down,
+                                       MouseEvents.LEFT_MOUSE_UP: _release}
         self.set_mouse_handlers(self.event_function_dict)
 
-    def create_object(self):
-        super().create_object()
+    def _create_surface(self):
+        super()._create_surface()
 
         # Coordinates need to be reference from window, not parent surface
-        parent_tmp = self.parent
+        this_parent = self.parent
         self.overall_coords = list(self.coordinates)
-        while parent_tmp != self.gui.window:
-            self.overall_coords[0] += parent_tmp.coordinates[0]
-            self.overall_coords[1] += parent_tmp.coordinates[1]
-            parent_tmp = parent_tmp.parent
+        while hasattr(this_parent, 'parent'):
+            self.overall_coords[0] += this_parent.parent.coordinates[0]
+            self.overall_coords[1] += this_parent.parent.coordinates[1]
+            this_parent = this_parent.parent
 
         self.create_rect()
 
@@ -59,45 +67,40 @@ class Button(Text):
 
             self.event_function_dict[func_name] = modify_default(self.default_mouse_handlers.get(func_name, lambda *_: None), func)
 
-    def mouse_event_handler(self, event):
+    def _scroll_event_to_distance(self, event):
+        scroll = event.button
+        scroll -= 3
+        if scroll % 2 == 1:
+            scroll += 1
+            scroll *= -1
+        scroll //= 2
+        return scroll
 
+    def mouse_event_handler(self, event):
         super().mouse_event_handler(event)
 
-        if event.type == pygame.MOUSEMOTION:
-            self.event_function_dict['move_mouse'](event)
-        elif event.type == pygame.MOUSEBUTTONDOWN and event.button < 4:
-            if event.button == 1:  # Left mouse
-                self.event_function_dict['left_mouse_down'](event)
-            elif event.button == 2:  # Middle mouse
-                self.event_function_dict['middle_mouse_down'](event)
-            elif event.button == 3:  # Right mouse
-                self.event_function_dict['right_mouse_down'](event)
-        elif event.type == pygame.MOUSEBUTTONUP and event.button < 4:
-            if event.button == 1:  # Left mouse
-                self.event_function_dict['left_mouse_up'](event)
-            elif event.button == 2:  # Middle mouse
-                self.event_function_dict['middle_mouse_up'](event)
-            elif event.button == 3:  # Right mouse
-                self.event_function_dict['right_mouse_up'](event)
-        else:
-            assert (event.type == pygame.MOUSEBUTTONDOWN or
-                    event.type == pygame.MOUSEBUTTONUP)
-            scroll = event.button
-            scroll -= 3
-            if scroll % 2 == 1:
-                scroll += 1
-                scroll *= -1
-            scroll //= 2
+        event_id = [event.type]
+        if hasattr(event, 'button'):
+            event_id.append(event.button)
 
-            self.event_function_dict['scroll_mouse'](event, scroll)
+        try:
+            mouse_event = MouseEvents(tuple(event_id))
+        except ValueError:
+            self.log.error(f'Unknown MouseEvent: {tuple(event_id)}')
+        else:
+            f = self.event_function_dict.get(mouse_event, None)
+            if f:
+                f(event)
 
     def check_collision(self, event):
-        mouse_pos = event.pos
-        return self.button_rect.collidepoint(mouse_pos)
+        collided = self.button_rect.collidepoint(event.pos)
+        if collided:
+            self.log.debug(f"Collision detected with {self}")
+        return collided
 
     def keyboard_event_handler(self, event):
-        if event.key == pygame.RETURN:
-            self.event_function_dict['left_mouse_up'](event)
+        if event.key == K_RETURN:
+            self.event_function_dict[MouseEvents.LEFT_MOUSE_UP](event)
 
     def move(self, del_x=0, del_y=0, x=None, y=None):
         if x is None:

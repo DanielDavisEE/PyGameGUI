@@ -10,6 +10,7 @@ Suggestions list:
  - ctrl-z and ctrl-y
  - something with ctrl-s
 """
+import logging
 import pygame
 
 import pygame_gui.components as gui
@@ -25,8 +26,9 @@ class GUIBase:
                  **kwargs):
         """window_size, caption, win_colour, colour_palette=None -> myGUI
         """
+        logging.basicConfig(level=logging.DEBUG)
         pygame.init()
-        
+
         self.window = gui.Window(
             dimensions=dimensions,
             caption=caption,
@@ -59,7 +61,7 @@ class GUIBase:
                 # Keyboard Events
                 if event.type in {pygame.KEYDOWN,
                                   pygame.KEYUP}:
-                    self.run_keyboard_event_handlers(event)
+                    # self.run_keyboard_event_handlers(event)
                     self.window.keyboard_event_handler(event)
 
                 # Mouse Events
