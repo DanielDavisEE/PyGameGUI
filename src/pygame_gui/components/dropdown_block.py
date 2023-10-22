@@ -252,7 +252,7 @@ class Dropdown(Block):
             item.move(y=i * self.dimensions[1] - self.scroll_amount)
 
     def filter_options(self):
-        text = self.textbox.primary_text['value'] + self.textbox.second_text['value']
+        text = self.textbox.text_info['value'] + self.textbox.second_text['value']
         for i, option in enumerate(self.options_list):
             if len(text) > 0 and text == option[:len(text)]:
                 self.scroll_amount = min(i * self.dimensions[1], self.max_scroll)

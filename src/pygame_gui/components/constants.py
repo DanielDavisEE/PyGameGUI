@@ -8,6 +8,30 @@ MARGIN = 10
 KMOD_BASE = 4096
 
 
+class KeyboardEvents(Enum):
+    CTRL = (KMOD_CTRL,)
+    SHIFT = (KMOD_SHIFT,)
+    ALT = (KMOD_ALT,)
+
+    CTRL_SHIFT = KMOD_CTRL, KMOD_SHIFT
+    CTRL_ALT = KMOD_CTRL, KMOD_ALT
+    SHIFT_ALT = KMOD_SHIFT, KMOD_ALT
+
+    CTRL_SHIFT_ALT = KMOD_CTRL, KMOD_SHIFT, KMOD_ALT
+
+
+typing_response = {
+    KeyboardEvents.CTRL: {'fallback': lambda *_: None},
+    KeyboardEvents.SHIFT: {'fallback': lambda *_: None},
+    KeyboardEvents.ALT: {'fallback': lambda *_: None},
+    KeyboardEvents.CTRL_SHIFT: {'fallback': lambda *_: None},
+    KeyboardEvents.CTRL_ALT: {'fallback': lambda *_: None},
+    KeyboardEvents.SHIFT_ALT: {'fallback': lambda *_: None},
+    KeyboardEvents.CTRL_SHIFT_ALT: {'fallback': lambda *_: None},
+    KMOD_SHIFT | KMOD_CAPS: {'fallback': lambda *_: None},
+}
+
+
 class MouseEvents(Enum):
     # Mouse events
     LEFT_MOUSE_UP = MOUSEBUTTONUP, BUTTON_LEFT

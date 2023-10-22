@@ -15,7 +15,7 @@ class Text(Block):
                  ):
         super().__init__(parent, **kwargs)
 
-        self.primary_text = {
+        self.text_info = {
             'value': str(text_value),
             # 'surface': Surface,
             # 'rect': tuple[int, int]
@@ -41,34 +41,25 @@ class Text(Block):
     def update_text(self):
         centre_coords = [int(n // 2) for n in self.dimensions]
 
-        self.primary_text['surface'] = self.font.render(self.primary_text['value'], True, self.font_colour)
+        self.text_info['surface'] = self.font.render(self.text_info['value'], True, self.font_colour)
         if self.text_alignment == Alignment.LEFT:
-            self.primary_text['rect'] = (self.primary_text['surface'].get_rect(
+            self.text_info['rect'] = (self.text_info['surface'].get_rect(
                 left=MARGIN,
                 centery=centre_coords[1]))
         elif self.text_alignment == Alignment.CENTRE:
-            self.primary_text['rect'] = (self.primary_text['surface'].get_rect(
+            self.text_info['rect'] = (self.text_info['surface'].get_rect(
                 center=centre_coords))
         elif self.text_alignment == Alignment.RIGHT:
-            self.primary_text['rect'] = (self.primary_text['surface'].get_rect(
+            self.text_info['rect'] = (self.text_info['surface'].get_rect(
                 right=(self.dimensions[0] - MARGIN),
                 centery=centre_coords[1]))
 
-    def set_text(self, text):
-        self.primary_text['value'] = text
+    def set_text(self, text: str):
+        self.text_info['value'] = text
 
-    def get_text(self):
-        return self.primary_text['value']
-
-    def append_text(self, text: str):
-        self.primary_text['value'] += text
-
-    def pop_text(self, amount: int = 1):
-        assert amount > 0
-        popped_text = self.primary_text['value'][-amount:]
-        self.primary_text['value'] = self.primary_text['value'][:-amount]
-        return popped_text
+    def get_text(self) -> str:
+        return self.text_info['value']
 
     def blit_text(self):
         self.update_text()
-        self.surface.blit(self.primary_text['surface'], self.primary_text['rect'])
+        self.surface.blit(self.text_info['surface'], self.text_info['rect'])
