@@ -98,10 +98,6 @@ class Button(Text):
             self.log.debug(f"Collision detected with {self}")
         return collided
 
-    def keyboard_event_handler(self, event):
-        if event.key == K_RETURN:
-            self.event_function_dict[MouseEvents.LEFT_MOUSE_UP](event)
-
     def move(self, del_x=0, del_y=0, x=None, y=None):
         if x is None:
             x = self.coordinates[0] + del_x

@@ -34,10 +34,10 @@ class ExampleGUI(GUIBase):
         }
         button1.set_mouse_handlers(func_dict)
 
-        # gui.TextBox(
-        #     self.window,
-        #     dimensions=(160, 40),
-        #     coordinates=(60, 200))
+        gui.TextBox(
+            self.window,
+            dimensions=(160, 40),
+            coordinates=(60, 200))
 
         # gui.Dropdown(self.window,
         #     dimensions=(16, 4),

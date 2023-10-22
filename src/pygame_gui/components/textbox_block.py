@@ -1,39 +1,52 @@
+import time
+
 import pygame
 import pyperclip
 
-from pygame_gui.components.constants import KMOD_BASE
+from pygame_gui.components.constants import KMOD_BASE, MARGIN, Alignment, MouseEvents
 from pygame_gui.components.button_block import Button
 
 
 class TextBox(Button):
+    tb_colours = {
+        True: 'white',
+        False: 'offwhite'
+    }
+    cursor_tick_time = 1  # s
 
-    def __init__(self, parent, **kwargs):
+    CTRL = {pygame.KMOD_CTRL}
+    SHIFT = {pygame.KMOD_SHIFT}
+    ALT = {pygame.KMOD_ALT}
 
-        self.active = False
-        self.tb_colours = {
-            True: 'white',
-            False: 'offwhite'
-        }
+    CTRL_SHIFT = {pygame.KMOD_CTRL, pygame.KMOD_SHIFT}
+    CTRL_ALT = {pygame.KMOD_CTRL, pygame.KMOD_ALT}
+    SHIFT_ALT = {pygame.KMOD_SHIFT, pygame.KMOD_ALT}
+
+    CTRL_SHIFT_ALT = {pygame.KMOD_CTRL, pygame.KMOD_SHIFT, pygame.KMOD_ALT}
+
+    def __init__(self, parent, *,
+                 active=False,
+                 **kwargs):
+        super().__init__(
+            parent,
+            colour=self.tb_colours[active],
+            text_alignment=Alignment.LEFT,
+            **kwargs)
+
+        self.active = active
+        self.last_tick_time = time.time()
 
         self.cursor_info = {
             'on': False,
-            'surface': None,
-            'rect': None
+            # 'surface': Surface,
+            # 'rect': tuple[int, int]
         }
-        self.second_text = {
+        self.secondary_text = {
             'value': '',
-            'surface': None,
-            'rect': None
+            # 'surface': Surface,
+            # 'rect': tuple[int, int]
         }
-
-        kwargs['colour'] = self.tb_colours[self.active]
-        kwargs['text_alignment'] = 'left'
-
-        super().__init__(parent, **kwargs)
-
-        self.set_mouse_handlers({'left_mouse_down': self.toggle_select})
-
-        self.cursor_info['colour'] = self.colour
+        self.set_mouse_handlers({MouseEvents.LEFT_MOUSE_DOWN: self.check_for_select})
 
     def update_cursor(self):
 
@@ -46,47 +59,56 @@ class TextBox(Button):
             left=text_rect.right,
             centery=text_rect.centery)
 
-    def toggle_select(self, event):
-        isCollision = self.check_collision(event)
-        if isCollision:
+    def check_for_select(self, event):
+        if self.check_collision(event):
             self.active = True
-            self.gui.active_object = self
-        if not isCollision:
-            self.active = False
+        else:
             self.cursor_info['on'] = False
-            if self.gui.active_object == self:
-                self.move_cursor(len(self.second_text['value']))
-                self.gui.active_object = None
+            if self.active:
+                self.move_cursor(len(self.secondary_text['value']))
+            self.active = False
 
         self.colour = self.colour_palette[self.tb_colours[self.active]]
 
-    def move_cursor(self, amount):
-        if amount < 0 and len(self.primary_text['value']) > 0:
-            self.second_text['value'] = self.primary_text['value'][amount] + self.second_text['value']
-            self.remove_text(amount)
-        elif amount > 0 and len(self.second_text['value']) > 0:
-            self.append_text(self.second_text['value'][:amount])
-            self.second_text['value'] = self.second_text['value'][amount:]
+    def move_cursor(self, amount: int):
+        if amount < 0:  # Left
+            if not len(self.primary_text['value']):
+                return
+
+            self.secondary_text['value'] = self.primary_text['value'][amount:] + self.secondary_text['value']
+            self.primary_text['value'] = self.primary_text['value'][:amount]
+
+        elif amount > 0:  # Right
+            if not len(self.secondary_text['value']):
+                return
+
+            self.primary_text['value'] = self.primary_text['value'] + self.secondary_text['value'][:amount]
+            self.secondary_text['value'] = self.secondary_text['value'][amount:]
 
     def update_text(self):
         super().update_text()
 
         if self.active:
 
-            if self.primary_text['rect'].width + self.cursor_info['rect'].width > (self.dimensions[0] - 2 * self._MARGIN):
+            if self.primary_text['rect'].width + self.cursor_info['rect'].width > (self.dimensions[0] - 2 * MARGIN):
                 self.primary_text['rect'] = (self.primary_text['surface'].get_rect(
-                    right=(self.dimensions[0] - self._MARGIN) - self.cursor_info['rect'].width,
+                    right=(self.dimensions[0] - MARGIN) - self.cursor_info['rect'].width,
                     centery=self.primary_text['rect'].centery))
 
             second_text_left = self.cursor_info['rect'].right
+
+            current_time = time.time()
+            if self.last_tick_time + self.cursor_tick_time < current_time:
+                self.toggle_cursor()
+                self.last_tick_time = current_time
 
         else:
             second_text_left = self.primary_text['rect'].right
 
         self.update_cursor()
 
-        self.second_text['surface'] = self.font.render(self.second_text['value'], 1, self.font_colour)
-        self.second_text['rect'] = self.second_text['surface'].get_rect(
+        self.secondary_text['surface'] = self.font.render(self.secondary_text['value'], 1, self.font_colour)
+        self.secondary_text['rect'] = self.secondary_text['surface'].get_rect(
             left=second_text_left,
             centery=self.primary_text['rect'].centery)
 
@@ -95,49 +117,73 @@ class TextBox(Button):
 
     def set_text(self, text):
         super().set_text(text)
-        self.second_text['value'] = ''
+        self.secondary_text['value'] = ''
 
     def get_text(self):
-        return self.primary_text['value'] + self.second_text['value']
+        return self.primary_text['value'] + self.secondary_text['value']
 
-    def append_text(self, text):
-        super().append_text(text)
+    def _is_modified_by(self, event, modifiers: set):
+        for modifier in modifiers:
+            if not event.mod & modifier:
+                return False
+        for modifier in (self.CTRL_SHIFT_ALT - modifiers):
+            if event.mod & modifier:
+                return False
+        return True
 
-    def remove_text(self, amount=-1):
-        super().remove_text(amount)
-
-    def keyboard_event_handler(self, event):
-        if (event.mod - KMOD_BASE) in {pygame.KMOD_LCTRL, pygame.KMOD_RCTRL, pygame.KMOD_CTRL}:
+    def _handle_modified_commands(self, event):
+        if self._is_modified_by(event, self.CTRL):
             character = pygame.key.name(event.key)
             if character == 'x':
-                pyperclip.copy(self.primary_text['value'] + self.second_text['value'])
-                self.second_text['value'] = ''
-                self.set_text('')
+                pyperclip.copy(self.primary_text['value'] + self.secondary_text['value'])
+                self.primary_text['value'] = ''
+                self.secondary_text['value'] = ''
             elif character == 'c':
-                pyperclip.copy(self.primary_text['value'] + self.second_text['value'])
+                pyperclip.copy(self.primary_text['value'] + self.secondary_text['value'])
             elif character == 'v':
                 text = pyperclip.paste()
-                self.second_text['value'] = ''
-                self.set_text(text)
+                self.primary_text['value'] = text
+                self.secondary_text['value'] = ''
 
-            elif character in ['a', 's', 'z', 'y', 'x', 'c', 'v']:
-                print('Get to this...')
-        elif event.key == pygame.K_RETURN:
+            elif event.key == pygame.K_BACKSPACE:
+                self.primary_text['value'] = ''
+            elif event.key == pygame.K_DELETE:
+                self.secondary_text['value'] = ''
+            elif event.key == pygame.K_LEFT:
+                self.move_cursor(-len(self.primary_text['value']))
+            elif event.key == pygame.K_RIGHT:
+                self.move_cursor(len(self.secondary_text['value']))
+
+            elif character in {'a', 's', 'z', 'y'}:
+                self.log.debug(f'Get to this... (ctrl {character})')
+        elif self._is_modified_by(event, self.SHIFT):
             pass
-        elif event.key == pygame.K_BACKSPACE:
-            self.remove_text()
-        elif event.key == pygame.K_DELETE:
-            self.second_text['value'] = self.second_text['value'][1:]
-        elif event.key == pygame.K_LEFT:
-            self.move_cursor(-1)
-        elif event.key == pygame.K_RIGHT:
-            self.move_cursor(1)
-        else:
-            self.append_text(event.unicode)
 
-        self.update_text()
+    def keyboard_event_handler(self, event):
+        super().keyboard_event_handler(event)
+
+        if self.active and event.type == pygame.KEYDOWN:
+            self.log.debug(f"({event.key=}, {event.type=}, {event.mod=}) received by {self}")
+
+            if event.mod:
+                self._handle_modified_commands(event)
+
+            elif event.key == pygame.K_RETURN:
+                pass
+            elif event.key == pygame.K_BACKSPACE:
+                self.pop_text()
+            elif event.key == pygame.K_DELETE:
+                self.secondary_text['value'] = self.secondary_text['value'][1:]
+            elif event.key == pygame.K_LEFT:
+                self.move_cursor(-1)
+            elif event.key == pygame.K_RIGHT:
+                self.move_cursor(1)
+            else:
+                self.append_text(event.unicode)
+
+            self.update_text()
 
     def blit_text(self):
         super().blit_text()
         self.surface.blit(self.cursor_info['surface'], self.cursor_info['rect'])
-        self.surface.blit(self.second_text['surface'], self.second_text['rect'])
+        self.surface.blit(self.secondary_text['surface'], self.secondary_text['rect'])

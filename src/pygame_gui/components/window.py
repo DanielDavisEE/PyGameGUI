@@ -64,18 +64,18 @@ class Window:
                               pygame.MOUSEBUTTONUP,
                               pygame.MOUSEMOTION}
 
-        for child in list(self.children):
+        for child in self.children:
             child.mouse_event_handler(event)
 
     def keyboard_event_handler(self, event):
-        pass
+        assert event.type in {pygame.KEYDOWN,
+                              pygame.KEYUP}
+
+        for child in self.children:
+            child.keyboard_event_handler(event)
 
     def blit_text(self):
         pass
 
     def add_child(self, block: Self):
         self.children.add(block)
-
-    def tick(self):
-        for child in list(self.children):
-            child.tick()

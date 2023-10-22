@@ -60,12 +60,14 @@ class Text(Block):
     def get_text(self):
         return self.primary_text['value']
 
-    def append_text(self, text):
+    def append_text(self, text: str):
         self.primary_text['value'] += text
 
-    def remove_text(self, amount=1):
+    def pop_text(self, amount: int = 1):
         assert amount > 0
+        popped_text = self.primary_text['value'][-amount:]
         self.primary_text['value'] = self.primary_text['value'][:-amount]
+        return popped_text
 
     def blit_text(self):
         self.update_text()

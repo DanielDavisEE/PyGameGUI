@@ -52,8 +52,6 @@ class GUIBase:
         while self.running:
             pygame.time.delay(int(1000 / self.refresh_rate))
 
-            self.window.tick()
-
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.quit_gui()
