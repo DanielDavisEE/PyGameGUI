@@ -150,8 +150,7 @@ class Block(Window):
         return coordinates, alignments, margins
 
     def _create_surface(self):
-        self.surface = pygame.Surface(self.dimensions).convert()
-        self.surface.fill(self.colour)
+        return pygame.Surface(self.dimensions).convert()
 
     def draw_block(self):
         super().draw_block()

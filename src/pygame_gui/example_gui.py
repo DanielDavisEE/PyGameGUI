@@ -20,18 +20,18 @@ class ExampleGUI(GUIBase):
             colour='white',
             text_value='Test')
 
-        # button1 = gui.Button(
-        #     self.window,
-        #     dimensions=(100, 40),
-        #     coordinates=(60, 140),
-        #     colour='white',
-        #     text_value='QUIT')
+        button1 = gui.Button(
+            self.window,
+            dimensions=(100, 40),
+            coordinates=(60, 140),
+            colour='white',
+            text_value='QUIT')
 
-        # func_dict = {
-        #     'left_mouse_up': lambda event: self.quit_gui() if button1.check_collision(event) and button1.held else None,
-        #     'middle_mouse_up': lambda event: print(1)
-        # }
-        # button1.set_mouse_handlers(func_dict)
+        func_dict = {
+            'left_mouse_up': lambda event: self.quit_gui() if button1.check_collision(event) and button1.held else None,
+            'middle_mouse_up': lambda event: print(1)
+        }
+        button1.set_mouse_handlers(func_dict)
 
         # gui.TextBox(
         #     self.window,

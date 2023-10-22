@@ -30,14 +30,14 @@ class Window:
         self.surface = None
         self.children = set()
 
+        self.surface = self._create_surface()
+
     def _create_surface(self):
         pygame.display.set_caption(self.caption)
-        self.surface = pygame.display.set_mode(self.dimensions)
-        self.surface.fill(self.colour)
+        return pygame.display.set_mode(self.dimensions)
 
     def draw_block(self):
-        if not self.surface:
-            self._create_surface()
+        self.surface.fill(self.colour)
 
         for child in sorted(self.children, key=lambda x: x.priority):
             child.draw_block()
