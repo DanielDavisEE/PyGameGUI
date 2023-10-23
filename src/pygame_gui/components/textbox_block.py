@@ -3,7 +3,7 @@ import time
 import pygame
 import pyperclip
 
-from pygame_gui.components.constants import KMOD_BASE, MARGIN, Alignment, MouseEvents
+from pygame_gui.components.constants import KMOD_BASE, MARGIN, Alignment, KeyboardModifiers, MouseEvents
 from pygame_gui.components.button_block import Button
 
 
@@ -13,17 +13,6 @@ class TextBox(Button):
         False: 'offwhite'
     }
     cursor_tick_time = 1  # s
-
-    CTRL = {pygame.KMOD_CTRL}
-    SHIFT = {pygame.KMOD_SHIFT}
-    ALT = {pygame.KMOD_ALT}
-
-    CTRL_SHIFT = {pygame.KMOD_CTRL, pygame.KMOD_SHIFT}
-    CTRL_ALT = {pygame.KMOD_CTRL, pygame.KMOD_ALT}
-    SHIFT_ALT = {pygame.KMOD_SHIFT, pygame.KMOD_ALT}
-
-    CTRL_SHIFT_ALT = {pygame.KMOD_CTRL, pygame.KMOD_SHIFT, pygame.KMOD_ALT}
-    CTRL_SHIFT_ALT_MASK = pygame.KMOD_CTRL | pygame.KMOD_SHIFT | pygame.KMOD_ALT
 
     def __init__(self, parent, *,
                  text_value='',
@@ -122,15 +111,15 @@ class TextBox(Button):
         super().set_text(text)
         self.cursor_info['location'] = len(text)
 
-    def _is_modified_by(self, event, modifiers: set):
+    def _is_modified_by(self, event, modifiers: KeyboardModifiers):
         for modifier in modifiers:
             if not event.mod & modifier:
                 return False
 
         # ctrl, shift and alt combine uniquely
-        for modifier in (self.CTRL_SHIFT_ALT - modifiers):
-            if event.mod & modifier:
-                return False
+        # for modifier in (self.CTRL_SHIFT_ALT - modifiers):
+        #     if event.mod & modifier:
+        #         return False
 
         return True
 
@@ -196,19 +185,21 @@ class TextBox(Button):
             '\x7f': lambda *_: self._handle_delete_input('\x7f'),
         }
 
+        # for mod in sorted(modifiers, key=lambda m: constants.__dict__[m]):
+        #     print(f'{mod}\t{constants.__dict__[mod]: >5}\t{constants.__dict__[mod]:0>15b}')
+
         if self.active:
             self.cursor_info['on'] = True
             self.last_tick_time = time.time()
 
             if event.type == pygame.KEYUP:
-                if event.key in {pygame.K_LSHIFT,
-                                 pygame.K_RSHIFT}:
+                if KeyboardModifiers(event.key) in KeyboardModifiers.SHIFT:
                     self.shift_held = False
 
             if event.type == pygame.KEYDOWN:
                 self.log.debug(f"({event.key=}, {event.type=}, {event.mod=}, {event.unicode=}) received by {self}")
 
-                if self._is_modified_by(event, self.CTRL):
+                if self._is_modified_by(event, KeyboardModifiers.CTRL):
                     # self._handle_ctrl_modified_commands(event)
                     pass
 
@@ -221,8 +212,7 @@ class TextBox(Button):
                 elif event.key in movement_keys:
                     movement_keys[event.key]()
 
-                elif event.key in {pygame.K_LSHIFT,
-                                   pygame.K_RSHIFT}:
+                if KeyboardModifiers(event.key) in KeyboardModifiers.SHIFT:
                     self.shift_held = True
 
                 self.update_text()

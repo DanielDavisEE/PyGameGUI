@@ -8,28 +8,50 @@ MARGIN = 10
 KMOD_BASE = 4096
 
 
-class KeyboardEvents(Enum):
-    CTRL = (KMOD_CTRL,)
-    SHIFT = (KMOD_SHIFT,)
-    ALT = (KMOD_ALT,)
+class KeyboardModifiers(IntFlag):
+    # Single bit flags
+    LSHIFT = KMOD_LSHIFT
+    RSHIFT = KMOD_RSHIFT
 
-    CTRL_SHIFT = KMOD_CTRL, KMOD_SHIFT
-    CTRL_ALT = KMOD_CTRL, KMOD_ALT
-    SHIFT_ALT = KMOD_SHIFT, KMOD_ALT
+    LCTRL = KMOD_LCTRL
+    RCTRL = KMOD_RCTRL
 
-    CTRL_SHIFT_ALT = KMOD_CTRL, KMOD_SHIFT, KMOD_ALT
+    LALT = KMOD_LALT
+    RALT = KMOD_RALT
+
+    LMETA = KMOD_LMETA
+    RMETA = KMOD_RMETA
+
+    NUM = KMOD_NUM
+    CAPS = KMOD_CAPS
+    MODE = KMOD_MODE
+
+    # Pygame builtin combinations
+    SHIFT = KMOD_SHIFT
+    CTRL = KMOD_CTRL
+    ALT = KMOD_ALT
+    META = KMOD_META
+
+    # Custom combinations
+    CTRL_SHIFT = CTRL | SHIFT
+    CTRL_ALT = CTRL | ALT
+    SHIFT_ALT = SHIFT | ALT
+    CTRL_SHIFT_ALT = CTRL | SHIFT | ALT
+
+    # Some bits inbetween flags were not used by pygame
+    _UNUSED = 4 | 8 | 16 | 32
 
 
-typing_response = {
-    KeyboardEvents.CTRL: {'fallback': lambda *_: None},
-    KeyboardEvents.SHIFT: {'fallback': lambda *_: None},
-    KeyboardEvents.ALT: {'fallback': lambda *_: None},
-    KeyboardEvents.CTRL_SHIFT: {'fallback': lambda *_: None},
-    KeyboardEvents.CTRL_ALT: {'fallback': lambda *_: None},
-    KeyboardEvents.SHIFT_ALT: {'fallback': lambda *_: None},
-    KeyboardEvents.CTRL_SHIFT_ALT: {'fallback': lambda *_: None},
-    KMOD_SHIFT | KMOD_CAPS: {'fallback': lambda *_: None},
-}
+# typing_response = {
+#     KeyboardEvents.CTRL: {'fallback': lambda *_: None},
+#     KeyboardEvents.SHIFT: {'fallback': lambda *_: None},
+#     KeyboardEvents.ALT: {'fallback': lambda *_: None},
+#     KeyboardEvents.CTRL_SHIFT: {'fallback': lambda *_: None},
+#     KeyboardEvents.CTRL_ALT: {'fallback': lambda *_: None},
+#     KeyboardEvents.SHIFT_ALT: {'fallback': lambda *_: None},
+#     KeyboardEvents.CTRL_SHIFT_ALT: {'fallback': lambda *_: None},
+#     KMOD_SHIFT | KMOD_CAPS: {'fallback': lambda *_: None},
+# }
 
 
 class MouseEvents(Enum):
