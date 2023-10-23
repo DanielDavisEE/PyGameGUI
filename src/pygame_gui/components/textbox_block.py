@@ -185,25 +185,24 @@ class TextBox(Button):
             '\x7f': lambda *_: self._handle_delete_input('\x7f'),
         }
 
-        # for mod in sorted(modifiers, key=lambda m: constants.__dict__[m]):
-        #     print(f'{mod}\t{constants.__dict__[mod]: >5}\t{constants.__dict__[mod]:0>15b}')
-
         if self.active:
             self.cursor_info['on'] = True
             self.last_tick_time = time.time()
 
             if event.type == pygame.KEYUP:
-                if KeyboardModifiers(event.key) in KeyboardModifiers.SHIFT:
+                if event.key in {pygame.K_LSHIFT,
+                                 pygame.K_RSHIFT}:
                     self.shift_held = False
 
             if event.type == pygame.KEYDOWN:
-                self.log.debug(f"({event.key=}, {event.type=}, {event.mod=}, {event.unicode=}) received by {self}")
+                self.log.debug(f"({event.key=}, {event.type=}, {event.mod=}, {event.unicode=}, name={pygame.key.name(event.key)}) received by {self}")
 
-                if self._is_modified_by(event, KeyboardModifiers.CTRL):
+                if KeyboardModifiers(event.mod) & KeyboardModifiers.CTRL:
+                    self.log.debug(f"ctrl + {pygame.key.name(event.key)} (unicode={repr(event.unicode)})")
                     # self._handle_ctrl_modified_commands(event)
                     pass
 
-                if event.unicode:
+                elif event.unicode:
                     if event.unicode in unique_unicode_actions:
                         unique_unicode_actions[event.unicode]()
                     else:
@@ -212,7 +211,8 @@ class TextBox(Button):
                 elif event.key in movement_keys:
                     movement_keys[event.key]()
 
-                if KeyboardModifiers(event.key) in KeyboardModifiers.SHIFT:
+                elif event.key in {pygame.K_LSHIFT,
+                                   pygame.K_RSHIFT}:
                     self.shift_held = True
 
                 self.update_text()
